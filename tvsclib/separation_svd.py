@@ -19,7 +19,7 @@ class SeparationSVD(separation_interface.SeparationInterface):
     
     """
 
-    def __init__(self, epsilon: float, relative=False, form=NormalForm.BALANCED):
+    def __init__(self, epsilon: float, relative=True, form=NormalForm.BALANCED):
         """ Constructor.
 
         Args:
@@ -51,9 +51,11 @@ class SeparationSVD(separation_interface.SeparationInterface):
         rank = len(S)
         singular_values_total = sum(S)
         if self.relative:
-            for rank_approx in range(0,rank):
+            rank_approx = 0
+            while rank_approx < rank:
                 if sum(S[0:rank_approx]) / singular_values_total >= 1 - self.epsilon:
                     break
+                rank_approx = rank_approx + 1
         else:
             rank_approx = sum(S > self.epsilon)
         # Retrieving observability and controlability matrix
