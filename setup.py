@@ -8,7 +8,7 @@ setup(
     author='ge37bov@mytum.de',
     license='MIT',
     install_requires=['numpy','scipy'],
-    setup_requires=['pytest-runner'],
+    setup_requires=['pytest-runner','sphinx'],
     tests_require=['pytest==4.4.1'],
     test_suite='tests',
 )

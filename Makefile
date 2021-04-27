@@ -1,4 +1,4 @@
-all: lint test dist 
+all: lint docs test dist 
 
 .IGNORE: lint
 .PHONY: lint
@@ -12,3 +12,7 @@ test:
 .PHONY: dist
 dist:
 	python setup.py bdist_wheel
+
+.PHONY: docs
+docs:
+	python setup.py build_sphinx -s docs/source/
