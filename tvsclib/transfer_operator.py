@@ -4,16 +4,16 @@ import numpy as np
 
 class TransferOperator:
     """ Represents a simple linear transfer operator with inputs and outputs.
-    
+
     Attributes:
         matrix (float[][]): Transfer operator matrix
         dims_in (int[]): input dimensions at each timestep as a list of integers
         dims_out (int[]): output dimensions at each timestep as list of integers
 
     """
-    def __init__(self, matrix, dims_in, dims_out):    
+    def __init__(self, matrix, dims_in, dims_out):
         """ Constructor.
-        
+
         Args:
             matrix (float[][]): Transfer operator matrix
             dims_in (int[]): input dimensions at each timestep as a list of integers
@@ -22,11 +22,11 @@ class TransferOperator:
         self.matrix   = matrix
         self.dims_in  = dims_in
         self.dims_out = dims_out
-    
+
     def get_hankels(self, causal: bool):
         """ Extracting hankel matricies from transfer operator.
 
-        Get the causal or anticausal hankel matricies that define 
+        Get the causal or anticausal hankel matricies that define
         the input/output mapping of the transfer operator.
 
         Args:

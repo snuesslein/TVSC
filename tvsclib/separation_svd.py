@@ -1,15 +1,16 @@
 """ Definition of the singular value decomposition separation class. """
 import numpy as np
 from enum import Enum
-from tvsclib.interfaces import separation_interface
+from tvsclib.interfaces.separation_interface import SeparationInterface
 
 
 class NormalForm(Enum):
+    """ Normal Forms of a state space system. """
     INPUT = 1    
     OUTPUT = 2
     BALANCED = 3
 
-class SeparationSVD(separation_interface.SeparationInterface):
+class SeparationSVD(SeparationInterface):
     """ Can be used to find A, B, C and D matricies via SVD.
 
     Attributes:
