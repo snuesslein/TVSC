@@ -94,10 +94,10 @@ class AddStrict(StateSpaceInterface):
             result_D.append(
                 realization_lhs.D[i] + realization_rhs.D[i]
             )
-        #return RealizationStrict(
-        #    causal=realization_lhs.causal,
-        #    A=result_A,
-        #    B=result_B,
-        #    C=result_C,
-        #    D=result_D
-        #)
+        return RealizationStrict(
+            causal=realization_lhs.causal,
+            A=result_A,
+            B=result_B,
+            C=result_C,
+            D=result_D
+        )
