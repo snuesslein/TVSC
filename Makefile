@@ -15,4 +15,4 @@ dist:
 
 .PHONY: docs
 docs:
-	python setup.py build_sphinx -s docs/source/
+	python setup.py build_sphinx -c docs/

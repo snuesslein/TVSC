@@ -1,9 +1,9 @@
 """ Definition of the realization mixed class. """
 import numpy as np
-from tvsclib.interfaces.statespace_interface import Causality
+from tvsclib.realization_strict import RealizationStrict
+from tvsclib.transfer_operator import TransferOperator
+from tvsclib.causality import Causality
 from tvsclib.interfaces.realization_interface import RealizationInterface
-from tvsclib import RealizationStrict
-from tvsclib import TransferOperator
 
 class RealizationMixed(RealizationInterface):
     """ Represents a mixed realization in state space. 

@@ -1,8 +1,8 @@
 """ Definition of the realization strict (causal or anticausal) class. """
 import numpy as np
 from scipy.linalg import block_diag
-from tvsclib import TransferOperator
-from tvsclib.interfaces.statespace_interface import Causality
+from tvsclib.transfer_operator import TransferOperator
+from tvsclib.causality import Causality
 from tvsclib.interfaces.separation_interface import SeparationInterface
 from tvsclib.interfaces.realization_interface import RealizationInterface
 

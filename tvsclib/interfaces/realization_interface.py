@@ -9,7 +9,7 @@ class RealizationInterface(StateSpaceInterface):
     concrete realizations of operations in state space.
     """
 
-    def __init__(self,**kwargs):
+    def __init__(self):
         """ Constructor. """  
         pass
     

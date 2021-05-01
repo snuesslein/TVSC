@@ -1,17 +1,26 @@
 """ Definition of the state  space interface. """
 import abc
-from enum import Enum
-
-class Causality(Enum):
-    CAUSAL = 1,
-    ANTICAUSAL = 2,
-    MIXED = 3
+from tvsclib.causality import Causality
 
 class StateSpaceInterface(object):
     __metaclass__ = abc.ABCMeta
     """ Classes which inherit this interface can represent
     operations and entities in state space.
+
+    Attributes:
+        add_factory (AddFactory): Factory used to build add operations
+        negate_factory (NegateFactory): Factory used to build negate operations
+        multiply_factory (MultiplyFactory): Factory used to build multiply operations
+        invert_factory (InvertFactory): Factory used to build invert operations
+        transpose_factory (TransposeFactory): Factory used to build transpose operations
+        convert_factory (ConvertFactory): Factory used to build convert operations
     """
+
+    add_factory = None
+    negate_factory = None
+    multiply_factory = None
+    invert_factory = None
+    transpose_factory = None
 
     def __init__(self):
         """ Constructor. """  
@@ -59,8 +68,8 @@ class StateSpaceInterface(object):
         
         Returns:
             StateSpaceInterface: Addition result in state space
-        """
-        raise NotImplementedError("Not implemented yet")
+        """      
+        return StateSpaceInterface.add_factory.get_add(self,rhs)
     
     def mul(self,rhs):
         """ Multiplication in state space.
@@ -96,6 +105,17 @@ class StateSpaceInterface(object):
             StateSpaceInterface: Transposition result in state space
         """
         raise NotImplementedError("Not implemented yet")
+
+    def convert(self,into):
+        """ Conversion of a state space entity to a differnt causality type.
+
+        Args:
+            into (Enum): The causality into which the state space entity shall be converted
+        
+        Returns:
+            StateSpaceInterface: Conversion result in state space
+        """
+        raise NotImplementedError("Not implemented yet")
     
     def transform(self,transformation,**kwargs):
         """ State transformation in state space.
@@ -106,16 +126,5 @@ class StateSpaceInterface(object):
 
         Returns:
             StateSpaceInterface: A entity with the same input output behaviour but different state space
-        """
-        raise NotImplementedError("Not implemented yet")
-
-    def convert(self,into):
-        """ Conversion of a state space entity to a differnt causality type.
-
-        Args:
-            into (Enum): The causality into which the state space entity shall be converted
-        
-        Returns:
-            StateSpaceInterface: Conversion result in state space
         """
         raise NotImplementedError("Not implemented yet")
