@@ -11,7 +11,7 @@ class NormalForm(Enum):
     BALANCED = 3
 
 class SeparationSVD(SeparationInterface):
-    """ Can be used to find A, B, C and D matricies via SVD.
+    """ Can be used to find Observability and Controlability matricies via SVD.
 
     Attributes:
         epsilon (float): Lower limit for singular values
