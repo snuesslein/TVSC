@@ -7,7 +7,8 @@ class Causality(Enum):
     ANTICAUSAL = 2,
     MIXED = 3
 
-class StateSpaceInterface(metaclass=abc.ABCMeta):
+class StateSpaceInterface(object):
+    __metaclass__ = abc.ABCMeta
     """ Classes which inherit this interface can represent
     operations and entities in state space.
     """

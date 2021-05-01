@@ -2,7 +2,8 @@
 import abc
 import numpy as np
 
-class SeparationInterface(metaclass=abc.ABCMeta):
+class SeparationInterface(object):
+    __metaclass__ = abc.ABCMeta
     """ Classes which inherit this interface can be used to
     create state space matricies from a transfer operator.
     """

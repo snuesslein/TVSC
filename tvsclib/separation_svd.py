@@ -1,6 +1,6 @@
 """ Definition of the singular value decomposition separation class. """
-import numpy as np
 from enum import Enum
+import numpy as np
 from tvsclib.interfaces.separation_interface import SeparationInterface
 
 
