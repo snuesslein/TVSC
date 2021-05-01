@@ -10,7 +10,7 @@ class RealizationStrict(RealizationInterface):
     """ Represents a strict causal or anticausal realization in state space.
 
     Attributes:
-        causality (bool): Type of the system, either causal or anticausal
+        causality (enum): Type of the system, either causal or anticausal
         dims_in (int[]): Input dimensions for each time step
         dims_out (int[]): Output dimensions for each time step
         dyn_degree (int[]): Dimension of the state space for each time step
