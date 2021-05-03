@@ -18,7 +18,6 @@ class RealizationStrict(RealizationInterface):
         B (matrix[]): B matricies for each time step
         C (matrix[]): C matricies for each time step
         D (matrix[]): D matricies for each time step
-    
     """
 
     @property
@@ -26,7 +25,7 @@ class RealizationStrict(RealizationInterface):
         if self.causal:
             return Causality.CAUSAL
         return Causality.ANTICAUSAL
-    
+
     @property
     def dims_in(self):
         return [el.shape[1] for el in self.B]
@@ -34,12 +33,22 @@ class RealizationStrict(RealizationInterface):
     @property
     def dims_out(self):
         return [el.shape[0] for el in self.C]
-    
+
     @property
     def dyn_degree(self):
+        """ Dynamical degree of the system
+
+        Returns:
+            int[]: The size of the state space over time
+        """
         return [el.shape[0] for el in self.A]
 
-    def __init__(self,causal=True,A=[],B=[],C=[],D=[],transferoperator=None,separation=None):
+    def __init__(
+        self,
+        causal=True,
+        A=[],B=[],C=[],D=[],
+        transferoperator:TransferOperator=None,
+        separation:SeparationInterface=None):
         """ Constructor.
 
         Args:
@@ -48,13 +57,13 @@ class RealizationStrict(RealizationInterface):
             B (matrix[]): List of B matricies
             C (matrix[]): List of C matricies
             D (matrix[]): List of D matricies
-            transferoperator (TransferOperator): Transfer operator instance which shall be used to generate realization
-            separation (SeparationInterface): Separation object which shall be used to decompose transfer operator
+            transferoperator (TransferOperator): Transfer operator instance
+                                                 which shall be used to generate realization
+            separation (SeparationInterface): Separation object which shall
+                                              be used to decompose transfer operator
         """
         self.causal = causal
         if transferoperator is not None and separation is not None:
-            assert issubclass(type(transferoperator), TransferOperator)
-            assert issubclass(type(separation), SeparationInterface)
             self.A,self.B,self.C,self.D = separation.separate(transferoperator,causal)
         else:
             self.A = A
@@ -106,7 +115,7 @@ class RealizationStrict(RealizationInterface):
         C = C_blk@projection_2
         D = D_blk
         Z = RealizationInterface.shiftoperator(A.shape[0])
-        
+
         matrix = D + C@np.linalg.pinv(np.eye(A.shape[0]) - Z@A)@Z@B
 
         return TransferOperator(matrix, self.dims_in, self.dims_out)

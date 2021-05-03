@@ -17,7 +17,7 @@ class AddStrict(StateSpaceInterface):
     def causality(self):
         return self.lhs_op.causality
 
-    def __init__(self,lhs_op,rhs_op):
+    def __init__(self,lhs_op:StateSpaceInterface,rhs_op:StateSpaceInterface):
         """ Constructor.
         
         Args:
@@ -49,7 +49,7 @@ class AddStrict(StateSpaceInterface):
             x_rhs
         ])
         y_result = y_lhs + y_rhs
-        return y_result
+        return (x_result,y_result)
     
     def compile(self):
         """ Returns a state space operation that can be directly computed.
@@ -69,9 +69,12 @@ class AddStrict(StateSpaceInterface):
         realization_lhs = self.lhs_op.realize()
         realization_rhs = self.rhs_op.realize()
 
-        assert np.all(realization_lhs.dims_in == realization_rhs.dims_in), "Input dimensions dont match"
-        assert np.all(realization_lhs.dims_out == realization_rhs.dims_out), "Output dimensions dont match"
-        assert realization_lhs.causality == realization_rhs.causality, "Causailties dont match"
+        if ~np.all(realization_lhs.dims_in == realization_rhs.dims_in):
+            raise AttributeError("Input dimensions dont match")
+        if ~np.all(realization_lhs.dims_out == realization_rhs.dims_out):
+            raise AttributeError("Output dimensions dont match")
+        if realization_lhs.causality is not realization_rhs.causality:
+            raise AttributeError("Causailties dont match")
 
         result_A = []
         result_B = []

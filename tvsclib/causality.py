@@ -3,6 +3,6 @@ from enum import Enum
 
 class Causality(Enum):
     """ A system can either be causal, anticausal or both. """
-    CAUSAL = 1,
-    ANTICAUSAL = 2,
+    CAUSAL = 1
+    ANTICAUSAL = 2
     MIXED = 3

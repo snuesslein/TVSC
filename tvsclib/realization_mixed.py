@@ -6,8 +6,8 @@ from tvsclib.causality import Causality
 from tvsclib.interfaces.realization_interface import RealizationInterface
 
 class RealizationMixed(RealizationInterface):
-    """ Represents a mixed realization in state space. 
-    
+    """ Represents a mixed realization in state space.
+
     Attributes:
         causality (enum): Type of the system, here always mixed
         causal_system (RealizationStrict): Causal sub system
@@ -19,7 +19,7 @@ class RealizationMixed(RealizationInterface):
     @property
     def causality(self):
         return Causality.MIXED
-    
+
     @property
     def dims_in(self):
         return self.causal_system.dims_in
@@ -27,25 +27,36 @@ class RealizationMixed(RealizationInterface):
     @property
     def dims_out(self):
         return self.causal_system.dims_out
-    
-    def __init__(self,causal_system=None,anticausal_system=None,transferoperator=None,separation=None):
+
+    def __init__(
+        self,
+        causal_system:RealizationStrict=None,
+        anticausal_system:RealizationStrict=None,
+        transferoperator:TransferOperator=None,
+        separation=None):
         """ Constructor.
 
         Args:
             causal_system (RealizationStrict): Causal sub system
             anticausal_system (RealizationStrinct): Anticausal sub system
-            transferoperator (TransferOperator): Transfer operator instance which shall be used to generate realization
-            separation (SeparationInterface): Separation object which shall be used to decompose transfer operator
+            transferoperator (TransferOperator): Transfer operator instance which shall be
+                                                 used to generate realization
+            separation (SeparationInterface): Separation object which shall be used to
+                                              decompose transfer operator
         """
-        if transferoperator is not None and separation is not None: 
-            self.causal_system = RealizationStrict(causal=True,transferoperator=transferoperator,separation=separation)
-            self.anticausal_system = RealizationStrict(causal=False,transferoperator=transferoperator,separation=separation)
+        if transferoperator is not None and separation is not None:
+            self.causal_system = RealizationStrict(
+                causal=True,
+                transferoperator=transferoperator,
+                separation=separation)
+            self.anticausal_system = RealizationStrict(
+                causal=False,
+                transferoperator=transferoperator,
+                separation=separation)
         else:
-            assert isinstance(causal_system,RealizationStrict)
-            assert isinstance(anticausal_system,RealizationStrict)
             self.causal_system = causal_system
             self.anticausal_system = anticausal_system
-    
+
     def compute(self,u):
         """ Computes the result of a vector applied to this realization.
         The states of the causal and anticausal system are returned in stacked
@@ -64,7 +75,7 @@ class RealizationMixed(RealizationInterface):
         ])
         y_result = y_causal + y_anticausal
         return (x_result,y_result)
-    
+
     def compile(self):
         return self
 
@@ -73,7 +84,7 @@ class RealizationMixed(RealizationInterface):
             causal_system=self.causal_system.realize(),
             anticausal_system=self.anticausal_system.realize()
         )
-    
+
     def generate_transferoperator(self):
         """ Generates a transfer operator from the state space realization.
 

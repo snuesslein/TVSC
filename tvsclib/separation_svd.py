@@ -6,7 +6,7 @@ from tvsclib.interfaces.separation_interface import SeparationInterface
 
 class NormalForm(Enum):
     """ Normal Forms of a state space system. """
-    INPUT = 1    
+    INPUT = 1
     OUTPUT = 2
     BALANCED = 3
 
@@ -15,9 +15,10 @@ class SeparationSVD(SeparationInterface):
 
     Attributes:
         epsilon (float): Lower limit for singular values
-        relative (bool): Indication if epsilon value is absolute or realtive to sum of all singular values
+        relative (bool): Indication if epsilon value is absolute or realtive to sum of all
+                         singular values
         form (enum): Specification which output-normal form to use
-    
+
     """
 
     def __init__(self, epsilon: float, relative=True, form=NormalForm.BALANCED):
@@ -25,19 +26,21 @@ class SeparationSVD(SeparationInterface):
 
         Args:
             epsilon (float): Lower limit for singular values.
-            relative (bool, optional):  Indication if epsilon value is absolute or realtive to sum of all singular values.
-            form (enum, optional): Specification which output-normal form to use. Defaults to NormalForm.Balanced.
+            relative (bool, optional):  Indication if epsilon value is absolute or
+                                        realtive to sum of all singular values.
+            form (enum, optional): Specification which output-normal
+                                   form to use. Defaults to NormalForm.Balanced.
         """
         self.epsilon = epsilon
         self.relative = relative
         self.form = form
-    
+
     def factorize_hankel(self, hankel):
         """ Factorizes a hankel matrix into observability and controlability matrix.
 
         Args:
             hankel (matrix): Hankel matrix
-        
+
         Returns:
             Obs,Con : Observability and controlability matrix
         """
@@ -75,5 +78,3 @@ class SeparationSVD(SeparationInterface):
             )
         }[self.form](U,S,V,rank_approx)
         return (Obs,Con)
-
-
