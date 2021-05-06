@@ -1,6 +1,7 @@
 """ Definition of the multiply strict class. """
 import numpy as np
 from scipy.linalg import block_diag
+from tvsclib.causality import Causality
 from tvsclib.realization_strict import RealizationStrict
 from tvsclib.interfaces.statespace_interface import StateSpaceInterface
 
@@ -18,6 +19,10 @@ class MultiplyStrict(StateSpaceInterface):
             lhs_op: Left hand side operand.
             rhs_op: Right hand side operand.
         """
+        if lhs_op.causality is not rhs_op.causality:
+            raise AttributeError("MultiplyStrict lhs_op and rhs_op have different causalities")
+        if lhs_op.causality == Causality.MIXED:
+            raise AttributeError("MultiplyStrict can not handle mixed systems")
         self.lhs_op = lhs_op
         self.rhs_op = rhs_op
 
@@ -67,10 +72,7 @@ class MultiplyStrict(StateSpaceInterface):
         realization_rhs = self.rhs_op.realize()
         
         if ~np.all(realization_lhs.dims_in == realization_rhs.dims_out):
-            raise AttributeError("Input/Output dimensions dont match")
-        if realization_lhs.causality is not realization_rhs.causality:
-            raise AttributeError("Causailties dont match")
-        
+            raise AttributeError("Input/Output dimensions dont match")        
         
         result_A = []
         result_B = []

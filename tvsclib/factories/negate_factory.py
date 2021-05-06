@@ -1,6 +1,7 @@
 """ Definition of the negate factory class. """
 from tvsclib.causality import Causality
 from tvsclib.operations.negate_strict import NegateStrict
+from tvsclib.operations.negate_mixed import NegateMixed
 
 class NegateFactory(object):
     """ Provides functionality to build a negation operation. """
@@ -21,4 +22,4 @@ class NegateFactory(object):
         if value.causality is not Causality.MIXED:
             return NegateStrict(value)
         else:
-            raise NotImplementedError("Not implemented yet")
+            return NegateMixed(value)

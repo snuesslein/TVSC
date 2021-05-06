@@ -1,6 +1,7 @@
 """ Definition of the transpose factory class. """
 from tvsclib.causality import Causality
 from tvsclib.operations.transpose_strict import TransposeStrict
+from tvsclib.operations.transpose_mixed import TransposeMixed
 
 class TransposeFactory(object):
     """ Provides functionality to build a transposition operation. """
@@ -21,4 +22,4 @@ class TransposeFactory(object):
         if value.causality is not Causality.MIXED:
             return TransposeStrict(value)
         else:
-            raise NotImplementedError("Not implemented yet")
+            return TransposeMixed(value)

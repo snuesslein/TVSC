@@ -1,17 +1,14 @@
-""" Definition of the transpose strict class. """
+""" Definition of the transpose mixed class. """
 from tvsclib.causality import Causality
-from tvsclib.realization_strict import RealizationStrict
+from tvsclib.realization_mixed import RealizationMixed
 from tvsclib.interfaces.statespace_interface import StateSpaceInterface
 
-class TransposeStrict(StateSpaceInterface):
+class TransposeMixed(StateSpaceInterface):
     """ Represents a transposition operation in state space. """
     
     @property
     def causality(self):
-        if self.operand.causality is not Causality.CAUSAL:
-            return Causality.CAUSAL
-        else:
-            return Causality.ANTICAUSAL
+        return Causality.MIXED
 
     def __init__(self,operand:StateSpaceInterface):
         """ Constructor.
@@ -19,8 +16,8 @@ class TransposeStrict(StateSpaceInterface):
         Args:
             operand: Operand to transpose.
         """
-        if operand.causality == Causality.MIXED:
-            raise AttributeError("TransposeStrict can not handle mixed systems")
+        if operand.causality is not Causality.MIXED:
+            raise AttributeError("TransposeMixed can not handle strict systems")
         self.operand = operand
 
     def transpose(self):
@@ -53,22 +50,9 @@ class TransposeStrict(StateSpaceInterface):
             Transposition in state space.
         """
         realization = self.operand.realize()
-        A_result = []
-        B_result = []
-        C_result = []
-        D_result = []
-        k = len(realization.A)
-        for i in range(k):
-            A_result.append(realization.A[i].transpose())
-            B_result.append(realization.C[i].transpose())
-            C_result.append(realization.B[i].transpose())
-            D_result.append(realization.D[i].transpose())
-        return RealizationStrict(
-            causal=not realization.causal,
-            A=A_result,
-            B=B_result,
-            C=C_result,
-            D=D_result
+        return RealizationMixed(
+            causal_system = realization.anticausal_system.transpose().realize(),
+            anticausal_system = realization.causal_system.transpose().realize()
         )
 
     def realize(self):

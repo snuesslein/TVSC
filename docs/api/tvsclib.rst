@@ -18,7 +18,6 @@ Submodules
    :maxdepth: 4
 
    tvsclib.causality
-   tvsclib.example
    tvsclib.realization_mixed
    tvsclib.realization_strict
    tvsclib.separation_svd

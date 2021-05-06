@@ -1,4 +1,7 @@
 """ Definition of the convert factory class. """
+from tvsclib.causality import Causality
+from tvsclib.operations.convert_strict import ConvertStrict
+from tvsclib.operations.convert_mixed import ConvertMixed
 
 class ConvertFactory(object):
     """ Provides functionality to build an conversion operation. """
@@ -7,7 +10,7 @@ class ConvertFactory(object):
         """ Constructor. """
         pass
 
-    def get_convert(self,value,into):
+    def get_convert(self,value:'StateSpaceInterface',into:Causality):
         """ Builds an convert operation. 
         
         Args:
@@ -17,4 +20,7 @@ class ConvertFactory(object):
         Returns:
             Convert operation.
         """
-        raise NotImplementedError("Not implemented yet")
+        if value.causality is not Causality.MIXED:
+            return ConvertStrict(value,into)
+        else:
+            return ConvertMixed(value,into)

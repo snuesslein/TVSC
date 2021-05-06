@@ -1,9 +1,9 @@
-""" Definition of the negate strict class. """
+""" Definition of the negate mixed class. """
 from tvsclib.causality import Causality
-from tvsclib.realization_strict import RealizationStrict
+from tvsclib.realization_mixed import RealizationMixed
 from tvsclib.interfaces.statespace_interface import StateSpaceInterface
 
-class NegateStrict(StateSpaceInterface):
+class NegateMixed(StateSpaceInterface):
     """ Represents a negation operation in state space. """
     
     @property
@@ -16,8 +16,8 @@ class NegateStrict(StateSpaceInterface):
         Args:
             operand: Operand to negate.
         """
-        if operand.causality == Causality.MIXED:
-            raise AttributeError("NegateStrict can not handle mixed systems")
+        if operand.causality is not Causality.MIXED:
+            raise AttributeError("NegateMixed can not handle strict systems")
         self.operand = operand
     
     def compute(self,u):
@@ -48,20 +48,7 @@ class NegateStrict(StateSpaceInterface):
             Realization of negation operation.
         """
         realization = self.operand.realize()
-        result_A = []
-        result_B = []
-        result_C = []
-        result_D = []
-        k = len(realization.A)
-        for i in range(k):
-            result_A.append(realization.A[i])
-            result_B.append(realization.B[i])
-            result_C.append(-realization.C[i])
-            result_D.append(-realization.D[i])
-        return RealizationStrict(
-            causal=realization.causal,
-            A=result_A,
-            B=result_B,
-            C=result_C,
-            D=result_D
+        return RealizationMixed(
+            causal_system = realization.causal_system.neg().realize(),
+            anticausal_system = realization.anticausal_system.neg().realize()
         )

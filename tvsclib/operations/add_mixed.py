@@ -1,12 +1,12 @@
-""" Definition of the add strict class. """
+""" Definition of the add mixed class. """
 import numpy as np
 from scipy.linalg import block_diag
 from tvsclib.causality import Causality
-from tvsclib.realization_strict import RealizationStrict
+from tvsclib.realization_mixed import RealizationMixed
 from tvsclib.interfaces.statespace_interface import StateSpaceInterface
 
-class AddStrict(StateSpaceInterface):
-    """ Represents an addition of two strict systems in state space. 
+class AddMixed(StateSpaceInterface):
+    """ Represents an addition of two mixed systems in state space. 
     
     Attributes:
         lhs_op: Left hand side operand.
@@ -25,9 +25,9 @@ class AddStrict(StateSpaceInterface):
             rhs_op: Right hand side operand.
         """
         if lhs_op.causality is not rhs_op.causality:
-            raise AttributeError("AddStrict lhs_op and rhs_op have different causalities")
-        if lhs_op.causality == Causality.MIXED:
-            raise AttributeError("AddStrinct can not handle mixed systems")
+            raise AttributeError("AddMixed lhs_op and rhs_op have different causalities")
+        if lhs_op.causality is not Causality.MIXED:
+            raise AttributeError("AddMixed can not handle strict systems")
         self.lhs_op = lhs_op
         self.rhs_op = rhs_op
 
@@ -38,7 +38,7 @@ class AddStrict(StateSpaceInterface):
         returns:
             Transposed add operation.
         """
-        return AddStrict(self.lhs_op.transpose(),self.rhs_op.transpose())
+        return AddMixed(self.lhs_op.transpose(),self.rhs_op.transpose())
 
     def compute(self,u):
         """ Applies a vector to addition result in state space.
@@ -80,32 +80,9 @@ class AddStrict(StateSpaceInterface):
             raise AttributeError("Input dimensions dont match")
         if ~np.all(realization_lhs.dims_out == realization_rhs.dims_out):
             raise AttributeError("Output dimensions dont match")
-
-        result_A = []
-        result_B = []
-        result_C = []
-        result_D = []
-        k = len(realization_lhs.A)
-        for i in range(k):
-            result_A.append(block_diag(
-                realization_lhs.A[i],
-                realization_rhs.A[i]
-            ))
-            result_B.append(np.vstack([
-                realization_lhs.B[i],
-                realization_rhs.B[i]
-            ]))
-            result_C.append(np.hstack([
-                realization_lhs.C[i],
-                realization_rhs.C[i]
-            ]))
-            result_D.append(
-                realization_lhs.D[i] + realization_rhs.D[i]
-            )
-        return RealizationStrict(
-            causal=realization_lhs.causal,
-            A=result_A,
-            B=result_B,
-            C=result_C,
-            D=result_D
-        )
+        
+        return RealizationMixed(
+            causal_system = realization_lhs.causal_system.add(
+                realization_rhs.causal_system).realize(),
+            anticausal_system = realization_lhs.anticausal_system.add(
+                realization_rhs.anticausal_system).realize())

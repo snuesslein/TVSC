@@ -152,4 +152,4 @@ class StateSpaceInterface(object):
         Returns:
             Conversion result in state space.
         """
-        raise NotImplementedError("Not implemented yet")
+        return StateSpaceInterface.convert_factory.get_convert(self,into)

@@ -46,7 +46,7 @@ class RealizationStrict(RealizationInterface):
     def __init__(
         self,
         causal:bool=True,
-        A=[],B=[],C=[],D=[],
+        A:list=None,B:list=None,C:list=None,D:list=None,
         transferoperator:TransferOperator=None,
         separation:SeparationInterface=None):
         """ Constructor.
@@ -164,4 +164,34 @@ class RealizationStrict(RealizationInterface):
         return (
             np.vstack(x_vectors),
             np.vstack(y_vectors)
+        )
+
+    @staticmethod
+    def zero(causal:bool,dims_in,dims_out):
+        """ Generates a zero realization.
+        
+        Args:
+            causal: Causality of the system.
+            dims_in: Input dimensions.
+            dims_out: Output dimensions.
+
+        Returns:
+            Zero realization.
+        """
+        result_A = []
+        result_B = []
+        result_C = []
+        result_D = []
+        k = len(dims_in)
+        for i in range(k):
+            result_A.append(np.zeros((0,0)))
+            result_B.append(np.zeros((0,dims_in[i])))
+            result_C.append(np.zeros((dims_out[i],0)))
+            result_D.append(np.zeros((dims_out[i],dims_in[i])))
+        return RealizationStrict(
+            causal=causal,
+            A = result_A,
+            B = result_B,
+            C = result_C,
+            D = result_D
         )
