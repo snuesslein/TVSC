@@ -1,4 +1,4 @@
-""" Class definition of TransferOperator """
+""" Class definition of TransferOperator. """
 import numpy as np
 
 
@@ -6,18 +6,18 @@ class TransferOperator:
     """ Represents a simple linear transfer operator with inputs and outputs.
 
     Attributes:
-        matrix (float[][]): Transfer operator matrix
-        dims_in (int[]): input dimensions at each timestep as a list of integers
-        dims_out (int[]): output dimensions at each timestep as list of integers
+        matrix: Transfer operator matrix.
+        dims_in: input dimensions at each timestep as a list of integers.
+        dims_out: output dimensions at each timestep as list of integers.
 
     """
     def __init__(self, matrix, dims_in, dims_out):
         """ Constructor.
 
         Args:
-            matrix (float[][]): Transfer operator matrix
-            dims_in (int[]): input dimensions at each timestep as a list of integers
-            dims_out (int[]): output dimensions at each timestep as list of integers
+            matrix: Transfer operator matrix.
+            dims_in: input dimensions at each timestep as a list of integers.
+            dims_out: output dimensions at each timestep as list of integers.
         """
         self.matrix   = matrix
         self.dims_in  = dims_in
@@ -30,10 +30,10 @@ class TransferOperator:
         the input/output mapping of the transfer operator.
 
         Args:
-            causal (bool): specifies if the causal or anticausal matricies shall be returned
+            causal: specifies if the causal or anticausal matricies shall be returned.
 
         Returns:
-            A list of matricies
+            A list of matricies.
         """
         if causal:
             number_of_inputs = len(self.dims_in)

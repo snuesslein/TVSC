@@ -9,15 +9,15 @@ class AddFactory(object):
         """ Constructor. """
         pass
 
-    def get_add(self,lhs,rhs):
+    def get_add(self,lhs:'StateSpaceInterface',rhs:'StateSpaceInterface'):
         """ Builds an add operation. 
         
         Args:
-            lhs (StateSpaceInterface): Left hand side operator
-            rhs (StateSpaceInterface): Right hand side operator
+            lhs: Left hand side operator.
+            rhs: Right hand side operator.
 
         Returns:
-            StateSpaceInterface: Entity that represents an addition in state space
+            Addition operation.
         """
         if lhs.causality == rhs.causality and rhs.causality is not Causality.MIXED:
             return AddStrict(lhs,rhs)

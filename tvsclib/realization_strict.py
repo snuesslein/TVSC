@@ -10,14 +10,14 @@ class RealizationStrict(RealizationInterface):
     """ Represents a strict causal or anticausal realization in state space.
 
     Attributes:
-        causality (enum): Type of the system, either causal or anticausal
-        dims_in (int[]): Input dimensions for each time step
-        dims_out (int[]): Output dimensions for each time step
-        dyn_degree (int[]): Dimension of the state space for each time step
-        A (matrix[]): A matricies for each time step
-        B (matrix[]): B matricies for each time step
-        C (matrix[]): C matricies for each time step
-        D (matrix[]): D matricies for each time step
+        causality: Type of the system, either causal or anticausal.
+        dims_in: Input dimensions for each time step.
+        dims_out: Output dimensions for each time step.
+        dyn_degree: Dimension of the state space for each time step.
+        A: A matricies for each time step.
+        B: B matricies for each time step.
+        C: C matricies for each time step
+        D: D matricies for each time step.
     """
 
     @property
@@ -36,31 +36,31 @@ class RealizationStrict(RealizationInterface):
 
     @property
     def dyn_degree(self):
-        """ Dynamical degree of the system
+        """ Dynamical degree of the system.
 
         Returns:
-            int[]: The size of the state space over time
+            The size of the state space over time.
         """
         return [el.shape[0] for el in self.A]
 
     def __init__(
         self,
-        causal=True,
+        causal:bool=True,
         A=[],B=[],C=[],D=[],
         transferoperator:TransferOperator=None,
         separation:SeparationInterface=None):
         """ Constructor.
 
         Args:
-            causal (bool): Determines if the realization is causal or anticausal
-            A (matrix[]): List of A matricies
-            B (matrix[]): List of B matricies
-            C (matrix[]): List of C matricies
-            D (matrix[]): List of D matricies
-            transferoperator (TransferOperator): Transfer operator instance
-                                                 which shall be used to generate realization
-            separation (SeparationInterface): Separation object which shall
-                                              be used to decompose transfer operator
+            causal: Determines if the realization is causal or anticausal.
+            A: List of A matricies.
+            B: List of B matricies.
+            C: List of C matricies.
+            D: List of D matricies.
+            transferoperator: Transfer operator instance
+                              which shall be used to generate realization.
+            separation: Separation object which shall
+                        be used to decompose transfer operator.
         """
         self.causal = causal
         if transferoperator is not None and separation is not None:
@@ -75,10 +75,10 @@ class RealizationStrict(RealizationInterface):
         """ Computes the result of a vector applied to this realization.
 
         Args:
-            u (float[]): Vector which is applied
+            u: Vector which is applied.
 
         Returns:
-            x,y: Resulting state vector x and result vector y
+            Resulting state vector x and result vector y.
         """
         if self.causal:
             return self._compute_causal(u)
@@ -90,11 +90,24 @@ class RealizationStrict(RealizationInterface):
     def realize(self):
         return self
 
+    def transform(self,transformation:str,**kwargs):
+        """ Apply state transformation.
+
+        Args:
+            transformation: Name of the transformation.
+            **kwargs: Arguments for the specific transformation.
+
+        Returns:
+            A realization with the same input output behaviour but different
+            state space.
+        """
+        raise NotImplementedError("Not implemented yet")
+
     def generate_transferoperator(self):
         """ Generates a transfer operator from the state space realization.
 
         Returns:
-            TransferOperator: Transfer operator object
+            Transfer operator object.
         """
         A_blk = block_diag(*self.A)
         B_blk = block_diag(*self.B)

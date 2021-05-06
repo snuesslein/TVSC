@@ -6,21 +6,58 @@ class StateSpaceInterface(object):
     __metaclass__ = abc.ABCMeta
     """ Classes which inherit this interface can represent
     operations and entities in state space.
-
-    Attributes:
-        add_factory (AddFactory): Factory used to build add operations
-        negate_factory (NegateFactory): Factory used to build negate operations
-        multiply_factory (MultiplyFactory): Factory used to build multiply operations
-        invert_factory (InvertFactory): Factory used to build invert operations
-        transpose_factory (TransposeFactory): Factory used to build transpose operations
-        convert_factory (ConvertFactory): Factory used to build convert operations
     """
 
-    add_factory = None
-    negate_factory = None
-    multiply_factory = None
-    invert_factory = None
-    transpose_factory = None
+    _add_factory = None
+    _negate_factory = None
+    _multiply_factory = None
+    _invert_factory = None
+    _transpose_factory = None
+
+    @property
+    def add_factory():
+        """Add Factory object."""
+        return StateSpaceInterface._add_factory
+
+    @add_factory.setter
+    def add_factory(value:'AddFactory'):
+        StateSpaceInterface._add_factory = value
+
+    @property
+    def negate_factory():
+        """Negate Factory object."""
+        return StateSpaceInterface._negate_factory
+
+    @negate_factory.setter
+    def negate_factory(value:'NegateFactory'):
+        StateSpaceInterface._negate_factory = value
+
+    @property
+    def multiply_factory():
+        """Multiply Factory object."""
+        return StateSpaceInterface._multiply_factory
+
+    @multiply_factory.setter
+    def multiply_factory(value:'MultiplyFactory'):
+        StateSpaceInterface._multiply_factory = value
+
+    @property
+    def invert_factory():
+        """Invert Factory object."""
+        return StateSpaceInterface._invert_factory
+
+    @invert_factory.setter
+    def invert_factory(value:'InvertFactory'):
+        StateSpaceInterface._invert_factory = value
+
+    @property
+    def transpose_factory():
+        """Transpose Factory object."""
+        return StateSpaceInterface._transpose_factory
+
+    @transpose_factory.setter
+    def transpose_factory(value:'TransposeFactory'):
+        StateSpaceInterface._transpose_factory = value
 
     def __init__(self):
         """ Constructor. """  
@@ -31,10 +68,10 @@ class StateSpaceInterface(object):
         """ Computes the result of a vector applied to this state space entity.
 
         Args:
-            u (float[]): Vector which is applied
+            u: Vector which is applied.
 
         Returns:
-            x,y: Resulting state vector x and result vector y
+            Resulting state vector x and result vector y.
         """
         pass
 
@@ -43,7 +80,7 @@ class StateSpaceInterface(object):
         """ Compiles state space entity into more basic, faster computable operations.
 
         Returns:
-            StateSpaceInterface: State space entity in the form of fast computable operations
+            State space entity in the form of fast computable operations.
         """
         pass 
 
@@ -52,7 +89,7 @@ class StateSpaceInterface(object):
         """ Generates a concrete realization of the state space entity.
 
         Returns:
-            RealizationInterface: Realization of the state space entity
+            Realization of the state space entity.
         """
 
     @abc.abstractproperty
@@ -60,41 +97,41 @@ class StateSpaceInterface(object):
         """ Either causal, anticausal or mixed. """
         pass
 
-    def add(self,rhs):
+    def add(self,rhs:'StateSpaceInterface'):
         """ Addition in state space.
 
         Args:
-            rhs (StateSpaceInterface): Right hand side of the addition operation
+            rhs: Right hand side of the addition operation.
         
         Returns:
-            StateSpaceInterface: Addition result in state space
+            Addition result in state space.
         """      
         return StateSpaceInterface.add_factory.get_add(self,rhs)
     
-    def mul(self,rhs):
+    def mul(self,rhs:'StateSpaceInterface'):
         """ Multiplication in state space.
 
         Args:
-            rhs (StateSpaceInterface): Right hand side of the multiplication operation
+            rhs: Right hand side of the multiplication operation.
         
         Returns:
-            StateSpaceInterface: Multiplication result in state space
+            Multiplication result in state space.
         """
-        raise NotImplementedError("Not implemented yet")
+        return StateSpaceInterface.multiply_factory.get_multiply(self,rhs)
     
     def neg(self):
         """ Negation in state space.
         
         Returns:
-            StateSpaceInterface: Negation result in state space
+            Negation result in state space.
         """
-        raise NotImplementedError("Not implemented yet")
+        return StateSpaceInterface.negate_factory.get_negate(self)
     
     def inv(self):
         """ Inversion in state space.
         
         Returns:
-            StateSpaceInterface: Inversion result in state space
+            Inversion result in state space.
         """
         raise NotImplementedError("Not implemented yet")
     
@@ -102,29 +139,17 @@ class StateSpaceInterface(object):
         """ Transposition in state space.
         
         Returns:
-            StateSpaceInterface: Transposition result in state space
+            Transposition result in state space.
         """
-        raise NotImplementedError("Not implemented yet")
+        return StateSpaceInterface.transpose_factory.get_transpose(self)
 
-    def convert(self,into):
+    def convert(self,into:Causality):
         """ Conversion of a state space entity to a differnt causality type.
 
         Args:
-            into (Enum): The causality into which the state space entity shall be converted
+            into: The causality into which the state space entity shall be converted.
         
         Returns:
-            StateSpaceInterface: Conversion result in state space
-        """
-        raise NotImplementedError("Not implemented yet")
-    
-    def transform(self,transformation,**kwargs):
-        """ State transformation in state space.
-        
-        Args:
-            transformation (string): Name of the transformation
-            **kwargs: Arguments for the specific transformation
-
-        Returns:
-            StateSpaceInterface: A entity with the same input output behaviour but different state space
+            Conversion result in state space.
         """
         raise NotImplementedError("Not implemented yet")

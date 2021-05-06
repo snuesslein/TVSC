@@ -1,4 +1,6 @@
 """ Definition of the transpose factory class. """
+from tvsclib.causality import Causality
+from tvsclib.operations.transpose_strict import TransposeStrict
 
 class TransposeFactory(object):
     """ Provides functionality to build a transposition operation. """
@@ -11,9 +13,12 @@ class TransposeFactory(object):
         """ Builds a transpose operation. 
         
         Args:
-            value (StateSpaceInterface): Entity that shall be transposed
+            value: Value that shall be transposed.
 
         Returns:
-            StateSpaceInterface: Transposed entity
+            Transpose operation.
         """
-        raise NotImplementedError("Not implemented yet")
+        if value.causality is not Causality.MIXED:
+            return TransposeStrict(value)
+        else:
+            raise NotImplementedError("Not implemented yet")

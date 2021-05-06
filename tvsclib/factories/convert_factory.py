@@ -11,10 +11,10 @@ class ConvertFactory(object):
         """ Builds an convert operation. 
         
         Args:
-            value (StateSpaceInterface): Entity that shall be converted
-            into (Enum): Causality type into which entity shall be converted
+            value: Entity that shall be converted.
+            into: Causality type into which entity shall be converted.
 
         Returns:
-            StateSpaceInterface: Converted entity
+            Convert operation.
         """
         raise NotImplementedError("Not implemented yet")

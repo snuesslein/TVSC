@@ -1,4 +1,6 @@
 """ Definition of the multiply factory class. """
+from tvsclib.causality import Causality
+from tvsclib.operations.multiply_strict import MultiplyStrict
 
 class MultiplyFactory(object):
     """ Provides functionality to build a multiplication operation. """
@@ -11,10 +13,13 @@ class MultiplyFactory(object):
         """ Builds an multiplication operation. 
         
         Args:
-            lhs (StateSpaceInterface): Left hand side operator
-            rhs (StateSpaceInterface): Right hand side operator
+            lhs: Left hand side operator.
+            rhs: Right hand side operator.
 
         Returns:
-            StateSpaceInterface: Entity that represents an multiplication in state space
+            Multiply operation.
         """
-        raise NotImplementedError("Not implemented yet")
+        if lhs.causality == rhs.causality and rhs.causality is not Causality.MIXED:
+            return MultiplyStrict(lhs,rhs)
+        else:
+            raise NotImplementedError("Not implemented yet")

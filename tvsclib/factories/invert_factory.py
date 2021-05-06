@@ -11,9 +11,9 @@ class InvertFactory(object):
         """ Builds an invert operation. 
         
         Args:
-            value (StateSpaceInterface): Entity that shall be inverted
+            value: Value that shall be inverted.
 
         Returns:
-            StateSpaceInterface: Inverted entity
+            Inverted operation.
         """
         raise NotImplementedError("Not implemented yet")

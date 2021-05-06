@@ -14,10 +14,10 @@ class SeparationSVD(SeparationInterface):
     """ Can be used to find Observability and Controlability matricies via SVD.
 
     Attributes:
-        epsilon (float): Lower limit for singular values
-        relative (bool): Indication if epsilon value is absolute or realtive to sum of all
-                         singular values
-        form (enum): Specification which output-normal form to use
+        epsilon: Lower limit for singular values.
+        relative: Indication if epsilon value is absolute or realtive to sum of all
+                  singular values.
+        form: Specification which output-normal form to use.
 
     """
 
@@ -25,11 +25,10 @@ class SeparationSVD(SeparationInterface):
         """ Constructor.
 
         Args:
-            epsilon (float): Lower limit for singular values.
-            relative (bool, optional):  Indication if epsilon value is absolute or
-                                        realtive to sum of all singular values.
-            form (enum, optional): Specification which output-normal
-                                   form to use. Defaults to NormalForm.Balanced.
+            epsilon: Lower limit for singular values.
+            relative: Indication if epsilon value is absolute or
+                      realtive to sum of all singular values.
+            form: Specification which output-normal form to use.
         """
         self.epsilon = epsilon
         self.relative = relative
@@ -39,10 +38,10 @@ class SeparationSVD(SeparationInterface):
         """ Factorizes a hankel matrix into observability and controlability matrix.
 
         Args:
-            hankel (matrix): Hankel matrix
+            hankel: Hankel matrix
 
         Returns:
-            Obs,Con : Observability and controlability matrix
+            Observability and controlability matrix
         """
         number_of_rows,number_of_cols = hankel.shape
         if number_of_rows >= number_of_cols:

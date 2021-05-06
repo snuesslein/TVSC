@@ -1,6 +1,7 @@
 """ Definition of the separation interface. """
 import abc
 import numpy as np
+from tvsclib.transfer_operator import TransferOperator
 
 class SeparationInterface(object):
     __metaclass__ = abc.ABCMeta
@@ -11,16 +12,16 @@ class SeparationInterface(object):
         """ Constructor. """  
         pass
 
-    def separate(self, transfer_operator, causal):
+    def separate(self, transfer_operator:TransferOperator, causal:bool):
         """ Separates transfer operator into A,B,C and D.
         matricies.
 
         Args:
-            transfer_operator (TransferOperator): Transfer Operator for which A, B, C and D shall be found
-            causal (bool): Determines if the causal or anticausal part is returned
+            transfer_operator: Transfer Operator for which A, B, C and D shall be found.
+            causal: Determines if the causal or anticausal part is returned.
 
         Returns:
-            A,B,C,D : Lists of matricies
+            Lists of A,B,C, and D matricies.
         """
         [Obs,Con] = self.factorize_hankels(transfer_operator, causal)
         if causal:
@@ -61,15 +62,15 @@ class SeparationInterface(object):
             C.append(np.zeros((transfer_operator.dims_out[number_of_inputs-1],0)))
         return (A,B,C,D)
     
-    def factorize_hankels(self, transfer_operator, causal : bool):
+    def factorize_hankels(self, transfer_operator:TransferOperator, causal:bool):
         """ Factorizes hankel matricies into observability and controlability matricies.
 
         Args:
-            transfer_operator (TransferOperator): Transfer Operator for which observability and controlability matricies shall be found
-            causal (bool): Determines if the causal or anticausal part is returned
+            transfer_operator: Transfer Operator for which observability and controlability matricies shall be found.
+            causal: Determines if the causal or anticausal part is returned.
 
         Returns:
-            Obs,Con : Lists of reachability and controlability matricies
+            Lists of reachability and controlability matricies.
         """
         number_of_inputs = len(transfer_operator.dims_in)
         number_of_outputs = len(transfer_operator.dims_out)
@@ -97,9 +98,9 @@ class SeparationInterface(object):
         """ Factorizes a hankel matrix into observability and controlability matrix.
 
         Args:
-            hankel (matrix): Hankel matrix
+            hankel: Hankel matrix.
         
         Returns:
-            Obs,Con : Observability and controlability matrix
+            Observability and controlability matrix.
         """
         pass

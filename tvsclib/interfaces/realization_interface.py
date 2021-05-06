@@ -18,7 +18,21 @@ class RealizationInterface(StateSpaceInterface):
         """ Generates a transfer operator from state space realization.
 
         Returns:
-            TransferOperator: Corresponding transfer operator
+            Corresponding transfer operator.
+        """
+        pass
+    
+    @abc.abstractmethod
+    def transform(self,transformation:str,**kwargs):
+        """ Apply state transformation.
+        
+        Args:
+            transformation: Name of the transformation.
+            **kwargs: Arguments for the specific transformation.
+
+        Returns:
+            A realization with the same input output behaviour but different
+            state space.
         """
         pass
     
@@ -33,13 +47,13 @@ class RealizationInterface(StateSpaceInterface):
         pass
 
     @staticmethod
-    def shiftoperator(N):
-        """ Causal shift (downshift) matrix
+    def shiftoperator(N:int):
+        """ Causal shift (downshift) matrix.
 
         Args:
-            N (int): Number of rows and columns
+            N: Number of rows and columns
 
         Returns:
-            float[][]: Shiftmatrix
+            Shiftmatrix
         """
         return np.diag(*np.ones((1,N-1)),-1)
