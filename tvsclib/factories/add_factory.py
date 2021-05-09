@@ -25,4 +25,5 @@ class AddFactory(object):
         else:
             return AddMixed(
                 lhs.convert(Causality.MIXED),
-                rhs.convert(Causality.MIXED))
+                rhs.convert(Causality.MIXED)
+            )

@@ -1,6 +1,7 @@
 """ Definition of the multiply factory class. """
 from tvsclib.causality import Causality
 from tvsclib.operations.multiply_strict import MultiplyStrict
+from tvsclib.operations.multiply_mixed import MultiplyMixed
 
 class MultiplyFactory(object):
     """ Provides functionality to build a multiplication operation. """
@@ -22,4 +23,7 @@ class MultiplyFactory(object):
         if lhs.causality == rhs.causality and rhs.causality is not Causality.MIXED:
             return MultiplyStrict(lhs,rhs)
         else:
-            raise NotImplementedError("Not implemented yet")
+            return MultiplyMixed(
+                lhs.convert(Causality.MIXED),
+                rhs.convert(Causality.MIXED)
+            )

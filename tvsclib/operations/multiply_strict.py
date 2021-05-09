@@ -85,7 +85,7 @@ class MultiplyStrict(StateSpaceInterface):
                 realization_lhs.A[i]
             ))
             result_A[i][
-                -realization_lhs.B[i].shape[0]:,
+                result_A[i].shape[0] - realization_lhs.B[i].shape[0]:,
                 0:realization_rhs.C[i].shape[1]
             ] = realization_lhs.B[i] @ realization_rhs.C[i]
             result_B.append(np.vstack([
