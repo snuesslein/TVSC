@@ -22,7 +22,7 @@ def test_multiply_mixed():
     T_2 = TransferOperator(matrix,dims_out,dims_in)
     R_2 = RealizationMixed(transferoperator=T_2,separation=separation)
     
-    muli = R_1.mul(R_2).realize()
+    muli = R_1.mul(R_2)
     R_muli = muli.realize()
     T_muli = R_muli.generate_transferoperator()
     matrix_muli = T_muli.matrix
