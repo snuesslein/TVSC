@@ -5,7 +5,7 @@ from tvsclib.causality import Causality
 class StateSpaceInterface(object):
     __metaclass__ = abc.ABCMeta
     """ Classes which inherit this interface can represent
-    operations and entities in state space.
+    operations and values in state space.
     """
 
     _add_factory = None
@@ -64,8 +64,17 @@ class StateSpaceInterface(object):
         pass
 
     @abc.abstractmethod
+    def compile(self):
+        """ Compiles this state space object into a computeable state space object.
+
+        Returns:
+            Computeable state space object.
+        """
+        pass
+
+    @abc.abstractmethod
     def compute(self,u):
-        """ Computes the result of a vector applied to this state space entity.
+        """ Applies a vector to this state space object.
 
         Args:
             u: Vector which is applied.
@@ -76,20 +85,11 @@ class StateSpaceInterface(object):
         pass
 
     @abc.abstractmethod
-    def compile(self):
-        """ Compiles state space entity into more basic, faster computable operations.
-
-        Returns:
-            State space entity in the form of fast computable operations.
-        """
-        pass 
-
-    @abc.abstractmethod
     def realize(self):
-        """ Generates a concrete realization of the state space entity.
+        """ Generates a concrete realization.
 
         Returns:
-            Realization of the state space entity.
+            Realization object.
         """
 
     @abc.abstractproperty
