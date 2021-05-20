@@ -11,8 +11,20 @@ class RealizationInterface(StateSpaceInterface):
 
     def __init__(self):
         """ Constructor. """  
-        pass
+        super().__init__(self._compute_function)
     
+    @abc.abstractmethod
+    def _compute_function(self,u):
+        """ Applies a vector to this state space object.
+
+        Args:
+            u: Vector which is applied.
+
+        Returns:
+            Resulting state vector x and result vector y.
+        """
+        pass
+
     @abc.abstractmethod
     def generate_transferoperator(self):
         """ Generates a transfer operator from state space realization.

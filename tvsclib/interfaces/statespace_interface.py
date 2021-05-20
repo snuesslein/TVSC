@@ -6,71 +6,41 @@ class StateSpaceInterface(object):
     __metaclass__ = abc.ABCMeta
     """ Classes which inherit this interface can represent
     operations and values in state space.
+
+    Attributes:
+        add_factory: Used to generate addition operations.
+        negate_factory: Used to generate negation operations.
+        invert_factory: Used to generate inversion operations.
+        transpose_factory: Used to generate transposition operations.
     """
 
-    _add_factory = None
-    _negate_factory = None
-    _multiply_factory = None
-    _invert_factory = None
-    _transpose_factory = None
+    add_factory = None
+    negate_factory = None
+    multiply_factory = None
+    invert_factory = None
+    transpose_factory = None
+    convert_factory = None
 
-    @property
-    def add_factory():
-        """Add Factory object."""
-        return StateSpaceInterface._add_factory
+    def __init__(self,compute_function=None):
+        """ Constructor. 
+        
+        Args:
+            compute_function: Callback to compute function. Is optional,
+                              if an operation needs to be compiled before it
+                              can be executed (e.g. Transpose) compute_function
+                              must not be set.
+        """
+        self.__compute_function = compute_function
 
-    @add_factory.setter
-    def add_factory(value:'AddFactory'):
-        StateSpaceInterface._add_factory = value
-
-    @property
-    def negate_factory():
-        """Negate Factory object."""
-        return StateSpaceInterface._negate_factory
-
-    @negate_factory.setter
-    def negate_factory(value:'NegateFactory'):
-        StateSpaceInterface._negate_factory = value
-
-    @property
-    def multiply_factory():
-        """Multiply Factory object."""
-        return StateSpaceInterface._multiply_factory
-
-    @multiply_factory.setter
-    def multiply_factory(value:'MultiplyFactory'):
-        StateSpaceInterface._multiply_factory = value
-
-    @property
-    def invert_factory():
-        """Invert Factory object."""
-        return StateSpaceInterface._invert_factory
-
-    @invert_factory.setter
-    def invert_factory(value:'InvertFactory'):
-        StateSpaceInterface._invert_factory = value
-
-    @property
-    def transpose_factory():
-        """Transpose Factory object."""
-        return StateSpaceInterface._transpose_factory
-
-    @transpose_factory.setter
-    def transpose_factory(value:'TransposeFactory'):
-        StateSpaceInterface._transpose_factory = value
-
-    def __init__(self):
-        """ Constructor. """  
-        pass
-
-    @abc.abstractmethod
     def compile(self):
-        """ Compiles this state space object into a computeable state space object.
+        """ Generates a state space object that has a compute function.
 
         Returns:
-            Computeable state space object.
+            State space object with compute function.
         """
-        pass
+        if self.__compute_function is None:
+            raise RuntimeError("State space object without compute function has to override compile()")
+        return self
 
     @abc.abstractmethod
     def compute(self,u):
@@ -82,7 +52,9 @@ class StateSpaceInterface(object):
         Returns:
             Resulting state vector x and result vector y.
         """
-        pass
+        if self.__compute_function is not None:
+            return self.__compute_function(u)
+        return self.compile().compute(u)
 
     @abc.abstractmethod
     def realize(self):
@@ -91,6 +63,7 @@ class StateSpaceInterface(object):
         Returns:
             Realization object.
         """
+        pass
 
     @abc.abstractproperty
     def causality(self):
@@ -133,7 +106,7 @@ class StateSpaceInterface(object):
         Returns:
             Inversion result in state space.
         """
-        raise NotImplementedError("Not implemented yet")
+        return StateSpaceInterface.invert_factory.get_invert(self)
     
     def transpose(self):
         """ Transposition in state space.
@@ -144,10 +117,10 @@ class StateSpaceInterface(object):
         return StateSpaceInterface.transpose_factory.get_transpose(self)
 
     def convert(self,into:Causality):
-        """ Conversion of a state space entity to a differnt causality type.
+        """ Conversion of a state space object to a differnt causality type.
 
         Args:
-            into: The causality into which the state space entity shall be converted.
+            into: The causality into which the state space object shall be converted.
         
         Returns:
             Conversion result in state space.

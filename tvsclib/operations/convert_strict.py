@@ -21,12 +21,13 @@ class ConvertStrict(StateSpaceInterface):
             operand: Operand to convert.
             into: Causality that shall be obtained.
         """
+        super().__init__(self._compute_function)
         if operand.causality == Causality.MIXED:
             raise AttributeError("ConvertStrict can not handle mixed systems")
         self.operand = operand
         self.into = into
     
-    def compute(self,u):
+    def _compute_function(self,u):
         """ Applies a vector to conversion result in state space.
 
         Args:
@@ -36,15 +37,6 @@ class ConvertStrict(StateSpaceInterface):
             Resulting state vector x and result vector y.
         """
         return self.operand.compute(u)
-
-    def compile(self):
-        """ Returns a state space operation that can be directly computed.
-        For conversion trivial since it can already be computed.
-
-        Returns:
-            Convert operation in state space.
-        """
-        return self
 
     def realize(self):
         """ Generates a state space realization of the convert operation. 

@@ -1,6 +1,5 @@
 """ Definition of the add mixed class. """
 import numpy as np
-from scipy.linalg import block_diag
 from tvsclib.causality import Causality
 from tvsclib.realization_mixed import RealizationMixed
 from tvsclib.interfaces.statespace_interface import StateSpaceInterface
@@ -24,6 +23,7 @@ class AddMixed(StateSpaceInterface):
             lhs_op: Left hand side operand.
             rhs_op: Right hand side operand.
         """
+        super().__init__(self._compute_function)
         if lhs_op.causality is not rhs_op.causality:
             raise AttributeError("AddMixed lhs_op and rhs_op have different causalities")
         if lhs_op.causality is not Causality.MIXED:
@@ -40,7 +40,7 @@ class AddMixed(StateSpaceInterface):
         """
         return AddMixed(self.lhs_op.transpose(),self.rhs_op.transpose())
 
-    def compute(self,u):
+    def _compute_function(self,u):
         """ Applies a vector to addition result in state space.
 
         Args:
@@ -57,15 +57,6 @@ class AddMixed(StateSpaceInterface):
         ])
         y_result = y_lhs + y_rhs
         return (x_result,y_result)
-
-    def compile(self):
-        """ Returns a state space operation that can be directly computed.
-        For addition trivial since it can already be computed.
-
-        Returns:
-            Addition in state space.
-        """
-        return self
 
     def realize(self):
         """ Generates a state space realization of the addition operation. 

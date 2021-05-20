@@ -18,6 +18,7 @@ class MultiplyMixed(StateSpaceInterface):
             lhs_op: Left hand side operand.
             rhs_op: Right hand side operand.
         """
+        super().__init__(self._compute_function)
         if lhs_op.causality is not rhs_op.causality:
             raise AttributeError("MultiplyMixed lhs_op and rhs_op have different causalities")
         if lhs_op.causality is not Causality.MIXED:
@@ -34,7 +35,7 @@ class MultiplyMixed(StateSpaceInterface):
         """
         return MultiplyMixed(self.rhs_op.transpose(),self.lhs_op.transpose())
 
-    def compute(self,u):
+    def _compute_function(self,u):
         """ Applies a vector to multiplication result in state space.
 
         Args:
@@ -51,15 +52,6 @@ class MultiplyMixed(StateSpaceInterface):
         ])
         y_result = y_lhs
         return (x_result,y_result)
-
-    def compile(self):
-        """ Returns a state space operation that can be directly computed.
-        For multiplication trivial since it can already be computed.
-
-        Returns:
-            Multiplication in state space.
-        """
-        return self
 
     def realize(self):
         """ Generates a state space realization of the multiplication operation. 

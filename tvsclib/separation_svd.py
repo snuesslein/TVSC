@@ -30,6 +30,7 @@ class SeparationSVD(SeparationInterface):
                       realtive to sum of all singular values.
             form: Specification which output-normal form to use.
         """
+        super().__init__()
         self.epsilon = epsilon
         self.relative = relative
         self.form = form

@@ -16,11 +16,12 @@ class NegateStrict(StateSpaceInterface):
         Args:
             operand: Operand to negate.
         """
+        super().__init__(self._compute_function)
         if operand.causality == Causality.MIXED:
             raise AttributeError("NegateStrict can not handle mixed systems")
         self.operand = operand
     
-    def compute(self,u):
+    def _compute_function(self,u):
         """ Applies a vector to negation result in state space.
 
         Args:
@@ -31,15 +32,6 @@ class NegateStrict(StateSpaceInterface):
         """
         x,y = self.operand.compute(u)
         return (x,-y)
-
-    def compile(self):
-        """ Returns a state space operation that can be directly computed.
-        For negation trivial since it can already be computed.
-
-        Returns:
-            Negation in state space.
-        """
-        return self
 
     def realize(self):
         """ Generates a state space realization of the negation operation. 

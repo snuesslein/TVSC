@@ -16,6 +16,7 @@ class TransposeMixed(StateSpaceInterface):
         Args:
             operand: Operand to transpose.
         """
+        super().__init__()
         if operand.causality is not Causality.MIXED:
             raise AttributeError("TransposeMixed can not handle strict systems")
         self.operand = operand
@@ -28,18 +29,6 @@ class TransposeMixed(StateSpaceInterface):
             Transposed transpose operation.
         """
         return self.operand
-
-    def compute(self,u):
-        """ Applies a vector to transposition result in state space.
-
-        Args:
-            u: Vector to be applied.
-
-        Returns: 
-            Resulting state vector x and result vector y.
-        """
-        x,y = self.compile().compute(u)
-        return (x,y)
 
     def compile(self):
         """ Returns a state space operation that can be directly computed.

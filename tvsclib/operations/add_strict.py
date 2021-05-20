@@ -24,6 +24,7 @@ class AddStrict(StateSpaceInterface):
             lhs_op: Left hand side operand.
             rhs_op: Right hand side operand.
         """
+        super().__init__(self._compute_function)
         if lhs_op.causality is not rhs_op.causality:
             raise AttributeError("AddStrict lhs_op and rhs_op have different causalities")
         if lhs_op.causality == Causality.MIXED:
@@ -40,7 +41,7 @@ class AddStrict(StateSpaceInterface):
         """
         return AddStrict(self.lhs_op.transpose(),self.rhs_op.transpose())
 
-    def compute(self,u):
+    def _compute_function(self,u):
         """ Applies a vector to addition result in state space.
 
         Args:
@@ -57,15 +58,6 @@ class AddStrict(StateSpaceInterface):
         ])
         y_result = y_lhs + y_rhs
         return (x_result,y_result)
-
-    def compile(self):
-        """ Returns a state space operation that can be directly computed.
-        For addition trivial since it can already be computed.
-
-        Returns:
-            Addition in state space.
-        """
-        return self
 
     def realize(self):
         """ Generates a state space realization of the addition operation. 

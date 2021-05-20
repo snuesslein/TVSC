@@ -10,10 +10,6 @@ class RealizationStrict(RealizationInterface):
     """ Represents a strict causal or anticausal realization in state space.
 
     Attributes:
-        causality: Type of the system, either causal or anticausal.
-        dims_in: Input dimensions for each time step.
-        dims_out: Output dimensions for each time step.
-        dyn_degree: Dimension of the state space for each time step.
         A: A matricies for each time step.
         B: B matricies for each time step.
         C: C matricies for each time step
@@ -36,11 +32,7 @@ class RealizationStrict(RealizationInterface):
 
     @property
     def dyn_degree(self):
-        """ Dynamical degree of the system.
-
-        Returns:
-            The size of the state space over time.
-        """
+        """ Dynamical degree of the system. """
         return [el.shape[0] for el in self.A]
 
     def __init__(
@@ -62,6 +54,7 @@ class RealizationStrict(RealizationInterface):
             separation: Separation object which shall
                         be used to decompose transfer operator.
         """
+        super().__init__()
         self.causal = causal
         if transferoperator is not None and separation is not None:
             self.A,self.B,self.C,self.D = separation.separate(transferoperator,causal)
@@ -71,7 +64,7 @@ class RealizationStrict(RealizationInterface):
             self.C = C
             self.D = D
 
-    def compute(self,u):
+    def _compute_function(self,u):
         """ Computes the result of a vector applied to this realization.
 
         Args:
@@ -83,9 +76,6 @@ class RealizationStrict(RealizationInterface):
         if self.causal:
             return self._compute_causal(u)
         return self._compute_anticausal(u)
-
-    def compile(self):
-        return self
 
     def realize(self):
         return self
@@ -169,7 +159,7 @@ class RealizationStrict(RealizationInterface):
     @staticmethod
     def zero(causal:bool,dims_in,dims_out):
         """ Generates a zero realization.
-        
+
         Args:
             causal: Causality of the system.
             dims_in: Input dimensions.

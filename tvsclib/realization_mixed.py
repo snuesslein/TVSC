@@ -10,11 +10,8 @@ class RealizationMixed(RealizationInterface):
     """ Represents a mixed realization in state space.
 
     Attributes:
-        causality: Type of the system, here always mixed.
         causal_system: Causal sub system.
         anticausal_system: Anticausal sub system.
-        dims_in: Input dimensions for each time step.
-        dims_out: Output dimensions for each time step.
     """
 
     @property
@@ -45,6 +42,7 @@ class RealizationMixed(RealizationInterface):
             separation: Separation object which shall be used to
                         decompose transfer operator.
         """
+        super().__init__()
         if transferoperator is not None and separation is not None:
             self.causal_system = RealizationStrict(
                 causal=True,
@@ -58,7 +56,7 @@ class RealizationMixed(RealizationInterface):
             self.causal_system = causal_system
             self.anticausal_system = anticausal_system
 
-    def compute(self,u):
+    def _compute_function(self,u):
         """ Computes the result of a vector applied to this realization.
         The states of the causal and anticausal system are returned in stacked
         fashion [x_causal,x_anticausal]'.
@@ -76,9 +74,6 @@ class RealizationMixed(RealizationInterface):
         ])
         y_result = y_causal + y_anticausal
         return (x_result,y_result)
-
-    def compile(self):
-        return self
 
     def realize(self):
         return RealizationMixed(

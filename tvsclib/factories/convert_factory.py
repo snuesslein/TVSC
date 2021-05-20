@@ -14,8 +14,8 @@ class ConvertFactory(object):
         """ Builds an convert operation. 
         
         Args:
-            value: Entity that shall be converted.
-            into: Causality type into which entity shall be converted.
+            value: State space object that shall be converted.
+            into: Causality type into which state space object shall be converted.
 
         Returns:
             Convert operation.
