@@ -2,6 +2,7 @@
 import warnings
 from tvsclib.causality import Causality
 from tvsclib.operations.invert_mixed import InvertMixed
+from tvsclib.operations.invert_strict import InvertStrict
 
 class InvertFactory(object):
     """ Provides functionality to build an inversion operation. """
@@ -20,8 +21,7 @@ class InvertFactory(object):
             Inverted operation.
         """
         if operand.causality is not Causality.MIXED:
-            warnings.warn("Causal system is converted to mixed for inversion")
-            return InvertMixed(operand.convert(Causality.MIXED))
+            return InvertStrict(operand)
         else:
             return InvertMixed(operand)
 

@@ -31,7 +31,7 @@ class InvertMixed(StateSpaceInterface):
         returns:
             Transposed invert operation.
         """
-        return InvertMixed(self.operand)
+        return InvertMixed(self.operand.transpose())
 
     def compile(self):
         """ Returns a state space operation that can be directly computed.

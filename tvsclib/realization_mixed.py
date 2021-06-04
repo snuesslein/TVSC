@@ -53,8 +53,8 @@ class RealizationMixed(RealizationInterface):
                 transferoperator=transferoperator,
                 separation=separation)
         else:
-            self.causal_system = causal_system
-            self.anticausal_system = anticausal_system
+            self.causal_system = causal_system.realize()
+            self.anticausal_system = anticausal_system.realize()
 
     def _compute_function(self,u):
         """ Computes the result of a vector applied to this realization.
@@ -77,9 +77,8 @@ class RealizationMixed(RealizationInterface):
 
     def realize(self):
         return RealizationMixed(
-            causal_system=self.causal_system.realize(),
-            anticausal_system=self.anticausal_system.realize()
-        )
+            causal_system=self.causal_system,
+            anticausal_system=self.anticausal_system)
 
     def transform(self,transformation:str,**kwargs):
         """ Apply state transformation.
@@ -106,5 +105,4 @@ class RealizationMixed(RealizationInterface):
         return TransferOperator(
             matrix,
             transferoperator_causal.dims_in,
-            transferoperator_causal.dims_out
-        )
+            transferoperator_causal.dims_out)

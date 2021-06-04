@@ -12,7 +12,7 @@ class RealizationStrict(RealizationInterface):
     Attributes:
         A: A matricies for each time step.
         B: B matricies for each time step.
-        C: C matricies for each time step
+        C: C matricies for each time step.
         D: D matricies for each time step.
     """
 
@@ -59,10 +59,10 @@ class RealizationStrict(RealizationInterface):
         if transferoperator is not None and separation is not None:
             self.A,self.B,self.C,self.D = separation.separate(transferoperator,causal)
         else:
-            self.A = A
-            self.B = B
-            self.C = C
-            self.D = D
+            self.A = A.copy()
+            self.B = B.copy()
+            self.C = C.copy()
+            self.D = D.copy()
 
     def _compute_function(self,u):
         """ Computes the result of a vector applied to this realization.
@@ -78,7 +78,13 @@ class RealizationStrict(RealizationInterface):
         return self._compute_anticausal(u)
 
     def realize(self):
-        return self
+        copied = RealizationStrict(
+            causal=self.causal,
+            A=self.A,
+            B=self.B,
+            C=self.C,
+            D=self.D)
+        return copied
 
     def transform(self,transformation:str,**kwargs):
         """ Apply state transformation.
