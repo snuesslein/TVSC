@@ -1,4 +1,3 @@
-from tvsclib.causality import Causality
 from tvsclib.system_interface import SystemInterface
 from tvsclib.strict_system import StrictSystem
 from tvsclib.mixed_system import MixedSystem

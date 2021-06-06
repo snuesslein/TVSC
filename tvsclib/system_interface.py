@@ -1,7 +1,6 @@
 from __future__ import annotations
 import numpy as np
 from typing import List, Tuple
-from tvsclib.causality import Causality
 
 class SystemInterface:
     def copy(self) -> SystemInterface:
@@ -29,16 +28,7 @@ class SystemInterface:
             np.ndarray: Matrix representation
         """
         raise NotImplementedError("copy not implemented")
-    
-    @property
-    def causality(self) -> Causality:
-        """causality Causality of the system
-
-        Returns:
-            Causality: Causality of the system
-        """
-        raise NotImplementedError("causality not implemented")
-    
+        
     @property
     def dims_in(self) -> List[int]:
         """dims_in Input dimensions for each time step

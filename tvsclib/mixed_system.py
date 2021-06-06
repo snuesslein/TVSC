@@ -1,7 +1,6 @@
 from __future__ import annotations
 import numpy as np
 from typing import Tuple, List
-from tvsclib.causality import Causality
 from tvsclib.strict_system import StrictSystem
 from tvsclib.system_identification_interface import SystemIdentificationInterface
 from tvsclib.system_interface import SystemInterface
@@ -18,15 +17,6 @@ class MixedSystem(SystemInterface):
             self.anticausal_system = anticausal_system
         else:
             raise AttributeError("Not enough arguments provided")
-    
-    @property
-    def causality(self) -> Causality:
-        """causality Causality of the system
-
-        Returns:
-            Causality: Causality of the system
-        """
-        return Causality.MIXED
     
     @property
     def dims_in(self) -> List[int]:

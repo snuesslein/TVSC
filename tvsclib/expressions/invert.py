@@ -1,5 +1,5 @@
-from tvsclib.causality import Causality
 import numpy as np
+from tvsclib.mixed_system import MixedSystem
 from tvsclib.expression import Expression
 from tvsclib.system_interface import SystemInterface
 from tvsclib.expressions.strict.invert import invert as invertStrict
@@ -62,7 +62,7 @@ class Invert(Expression):
         """
         system = self.operand.realize()
 
-        if system.causality is Causality.MIXED:
+        if type(system) is MixedSystem:
             return invertMixed(system)
         else:
             return invertStrict(system)

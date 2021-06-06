@@ -1,6 +1,5 @@
-from tvsclib.mixed_system import MixedSystem
-from tvsclib.causality import Causality
 import numpy as np
+from tvsclib.mixed_system import MixedSystem
 from tvsclib.expression import Expression
 from tvsclib.system_interface import SystemInterface
 from tvsclib.expressions.strict.multiply import multiply as multiplyStrict
@@ -67,8 +66,8 @@ class Multiply(Expression):
         system_lhs = self.lhs.realize()
         system_rhs = self.rhs.realize()
 
-        if system_lhs.causality is system_rhs.causality \
-            and system_rhs.causality is not Causality.MIXED:
+        if type(system_lhs) is type(system_rhs) \
+            and type(system_rhs) is not MixedSystem:
             return multiplyStrict(system_lhs, system_rhs)
         else:
             return multiplyMixed(

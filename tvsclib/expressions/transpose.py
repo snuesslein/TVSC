@@ -1,5 +1,5 @@
-from tvsclib.causality import Causality
 import numpy as np
+from tvsclib.mixed_system import MixedSystem
 from tvsclib.expression import Expression
 from tvsclib.system_interface import SystemInterface
 from tvsclib.expressions.strict.transpose import transpose as transposeStrict
@@ -46,7 +46,7 @@ class Transpose(Expression):
         """
         system = self.operand.realize()
 
-        if system.causality is Causality.MIXED:
+        if type(system) is MixedSystem:
             return transposeMixed(system)
         else:
             return transposeStrict(system)

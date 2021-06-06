@@ -4,7 +4,6 @@ from scipy.linalg import block_diag
 from copy import deepcopy
 from typing import List, Tuple
 from tvsclib.stage import Stage
-from tvsclib.causality import Causality
 from tvsclib.system_identification_interface import SystemIdentificationInterface
 from tvsclib.system_interface import SystemInterface
 
@@ -36,17 +35,6 @@ class StrictSystem(SystemInterface):
             StrictSystem: Copy of this system
         """
         return StrictSystem(causal=self.causal, stages=deepcopy(self.stages))
-
-    @property
-    def causality(self) -> Causality:
-        """causality Causality of the system
-
-        Returns:
-            Causality: Causality of the system
-        """
-        if self.causal:
-            return Causality.CAUSAL
-        return Causality.ANTICAUSAL
     
     @property
     def dims_in(self) -> List[int]:

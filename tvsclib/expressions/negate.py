@@ -1,11 +1,11 @@
 import numpy as np
+from tvsclib.mixed_system import MixedSystem
 from tvsclib.expression import Expression
 from tvsclib.system_interface import SystemInterface
 from tvsclib.expressions.strict.negate import negate as negateStrict
 from tvsclib.expressions.mixed.negate import negate as negateMixed
 from tvsclib.expressions.transpose import Transpose
 from tvsclib.expressions.invert import Invert
-from tvsclib.causality import Causality
 
 class Negate(Expression):
     def __init__(self, operand:Expression, name:str = "negation"):
@@ -62,7 +62,7 @@ class Negate(Expression):
         """
         system = self.operand.realize()
 
-        if system.causality is Causality.MIXED:
+        if type(system) is MixedSystem:
             return negateMixed(system)
         else:
             return negateStrict(system)        
