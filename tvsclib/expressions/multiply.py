@@ -1,3 +1,4 @@
+from tvsclib.strict_system import StrictSystem
 import numpy as np
 from tvsclib.mixed_system import MixedSystem
 from tvsclib.expression import Expression
@@ -67,7 +68,7 @@ class Multiply(Expression):
         system_rhs = self.rhs.realize()
 
         if type(system_lhs) is type(system_rhs) \
-            and type(system_rhs) is not MixedSystem:
+            and type(system_rhs) is StrictSystem:
             return multiplyStrict(system_lhs, system_rhs)
         else:
             return multiplyMixed(

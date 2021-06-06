@@ -1,4 +1,5 @@
 import numpy as np
+from tvsclib.strict_system import StrictSystem
 from tvsclib.mixed_system import MixedSystem
 from tvsclib.expression import Expression
 from tvsclib.system_interface import SystemInterface
@@ -51,7 +52,7 @@ class Add(Expression):
         system_rhs = self.rhs.realize()
 
         if type(system_lhs) is type(system_rhs) \
-            and type(system_rhs) is not MixedSystem:
+            and type(system_rhs) is StrictSystem:
             return addStrict(system_lhs, system_rhs)
         else:
             return addMixed(
