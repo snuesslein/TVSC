@@ -30,7 +30,7 @@ class Transpose(Expression):
     
     def transpose(self) -> Expression:
         """transpose Can be overwritten by concrete expression classes to
-        carry out the transposition higher up in the expression tree if possible.
+        carry out the transposition lower down in the expression tree if possible.
 
         Returns:
             Expression: An equivalent expression with the transposition moved to the operand(s)

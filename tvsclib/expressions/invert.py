@@ -31,7 +31,7 @@ class Invert(Expression):
     
     def transpose(self) -> Expression:
         """transpose Can be overwritten by concrete expression classes to
-        carry out the transposition higher up in the expression tree if possible.
+        carry out the transposition lower down in the expression tree if possible.
 
         Returns:
             Expression: An equivalent expression with the transposition moved to the operand(s)
@@ -41,7 +41,7 @@ class Invert(Expression):
     
     def invert(self) -> Expression:
         """invert Can be overwritten by concrete expression classes to
-        carry out the inversion higher up in the expression tree if possible.
+        carry out the inversion lower down in the expression tree if possible.
 
         E.g. ((A + B) * C)^1 -> C^-1 * (A + B)^-1. Since we are usually loosing minimality
         when doing additions or multiplications the state space gets rather large.
