@@ -1,13 +1,12 @@
-from tvsclib.strict_system import StrictSystem
 import numpy as np
+from typing import Callable
 from tvsclib.mixed_system import MixedSystem
 from tvsclib.expression import Expression
 from tvsclib.system_interface import SystemInterface
 from tvsclib.expressions.strict.multiply import multiply as multiplyStrict
 from tvsclib.expressions.mixed.multiply import multiply as multiplyMixed
 from tvsclib.expressions.utils.convert import convert
-from tvsclib.expressions.transpose import Transpose
-from tvsclib.expressions.invert import Invert
+from tvsclib.strict_system import StrictSystem
 
 class Multiply(Expression):
     def __init__(self, lhs:Expression, rhs:Expression, name:str = "multiplication"):
@@ -33,17 +32,20 @@ class Multiply(Expression):
         """
         return self.lhs.compute(self.rhs.compute(input))
     
-    def transpose(self) -> Expression:
+    def transpose(self, make_transpose:Callable[[Expression], Expression]) -> Expression:
         """transpose Can be overwritten by concrete expression classes to
         carry out the transposition lower down in the expression tree if possible.
+
+        Args:
+            make_transpose (Callable[[Expression], Expression]): Function that returns the transposed expression of the argument
 
         Returns:
             Expression: An equivalent expression with the transposition moved to the operand(s)
             if possible, None otherwise
         """
-        return Multiply(Transpose(self.rhs), Transpose(self.lhs))
+        return Multiply(make_transpose(self.rhs), make_transpose(self.lhs), "multiply.transpose:"+self.name)
     
-    def invert(self) -> Expression:
+    def invert(self, make_inverse:Callable[[Expression], Expression]) -> Expression:
         """invert Can be overwritten by concrete expression classes to
         carry out the inversion lower down in the expression tree if possible.
 
@@ -52,11 +54,14 @@ class Multiply(Expression):
         Computing the inverse on this "bloated" state space is computational costly. Therefor
         it is better to carry out the inversion earlier on "more minimal" systems.
 
+        Args:
+            make_inverse (Callable[[Expression], Expression]): Function that returns the inverse expression of the argument
+
         Returns:
             Expression: An equivalent expression with the inversion moved to the operand(s)
             if possible, None otherwise
         """
-        return Multiply(Invert(self.rhs), Invert(self.lhs))
+        return Multiply(make_inverse(self.rhs), make_inverse(self.lhs),"multiply.invert:"+self.name)
     
     def realize(self) -> SystemInterface:
         """realize Generates a state space system from the expression tree
@@ -67,8 +72,8 @@ class Multiply(Expression):
         system_lhs = self.lhs.realize()
         system_rhs = self.rhs.realize()
 
-        if type(system_lhs) is type(system_rhs) \
-            and type(system_rhs) is StrictSystem:
+        if type(system_lhs) is StrictSystem and type(system_rhs) is StrictSystem \
+            and system_lhs.causal == system_rhs.causal:
             return multiplyStrict(system_lhs, system_rhs)
         else:
             return multiplyMixed(
@@ -83,4 +88,4 @@ class Multiply(Expression):
             Expression: Expression tree which may needs less memory and time
             to compute
         """
-        return Multiply(self.lhs.compile(), self.rhs.compile())
+        return Multiply(self.lhs.compile(), self.rhs.compile(),"compile:"+self.name)

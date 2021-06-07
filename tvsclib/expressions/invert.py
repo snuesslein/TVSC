@@ -1,10 +1,10 @@
 import numpy as np
+from typing import Callable
 from tvsclib.mixed_system import MixedSystem
 from tvsclib.expression import Expression
 from tvsclib.system_interface import SystemInterface
 from tvsclib.expressions.strict.invert import invert as invertStrict
 from tvsclib.expressions.mixed.invert import invert as invertMixed
-from tvsclib.expressions.transpose import Transpose
 
 class Invert(Expression):
     def __init__(self, operand:Expression, name:str = "inversion"):
@@ -26,20 +26,27 @@ class Invert(Expression):
         Returns:
             np.ndarray: Output vector
         """
-        _, y = self.compile().realize().compute(input)
-        return y
+        system = self.operand.realize()
+
+        if type(system) is MixedSystem:
+            return invertMixed(system).compute(input)
+        else:
+            return invertStrict(system).compute(input)
     
-    def transpose(self) -> Expression:
+    def transpose(self, make_transpose:Callable[[Expression], Expression]) -> Expression:
         """transpose Can be overwritten by concrete expression classes to
         carry out the transposition lower down in the expression tree if possible.
+
+        Args:
+            make_transpose (Callable[[Expression], Expression]): Function that returns the transposed expression of the argument
 
         Returns:
             Expression: An equivalent expression with the transposition moved to the operand(s)
             if possible, None otherwise
         """
-        return Invert(Transpose(self.operand))
+        return Invert(make_transpose(self.operand), "invert.transpose:"+self.name)
     
-    def invert(self) -> Expression:
+    def invert(self, make_inverse:Callable[[Expression], Expression]) -> Expression:
         """invert Can be overwritten by concrete expression classes to
         carry out the inversion lower down in the expression tree if possible.
 
@@ -47,6 +54,9 @@ class Invert(Expression):
         when doing additions or multiplications the state space gets rather large.
         Computing the inverse on this "bloated" state space is computational costly. Therefor
         it is better to carry out the inversion earlier on "more minimal" systems.
+
+        Args:
+            make_inverse (Callable[[Expression], Expression]): Function that returns the inverse expression of the argument
 
         Returns:
             Expression: An equivalent expression with the inversion moved to the operand(s)
@@ -63,9 +73,9 @@ class Invert(Expression):
         system = self.operand.realize()
 
         if type(system) is MixedSystem:
-            return invertMixed(system)
+            return invertMixed(system).realize()
         else:
-            return invertStrict(system)
+            return invertStrict(system).realize()
         
     
     def compile(self) -> Expression:
@@ -76,7 +86,7 @@ class Invert(Expression):
             to compute
         """
         expr = self.operand.compile()
-        inv = expr.invert()
+        inv = expr.invert(lambda operand: Invert(operand,"invert.compile:"+operand.name))
         if inv is not None:
             return inv.compile()
-        return Invert(expr)
+        return Invert(expr, "compile:"+self.name)

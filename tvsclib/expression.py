@@ -1,6 +1,6 @@
 from __future__ import annotations
 import numpy as np
-from typing import List
+from typing import List, Callable
 from tvsclib.system_interface import SystemInterface
 
 class Expression:
@@ -43,7 +43,7 @@ class Expression:
         """
         raise NotImplementedError("compile not implemented")
     
-    def invert(self) -> Expression:
+    def invert(self, make_inverse:Callable[[Expression], Expression]) -> Expression:
         """invert Can be overwritten by concrete expression classes to
         carry out the inversion lower down in the expression tree if possible.
 
@@ -52,15 +52,21 @@ class Expression:
         Computing the inverse on this "bloated" state space is computational costly. Therefor
         it is better to carry out the inversion earlier on "more minimal" systems.
 
+        Args:
+            make_inverse (Callable[[Expression], Expression]): Function that returns the inverse expression of the argument
+
         Returns:
             Expression: An equivalent expression with the inversion moved to the operand(s)
             if possible, None otherwise
         """
         return None
     
-    def transpose(self) -> Expression:
+    def transpose(self, make_transpose:Callable[[Expression], Expression]) -> Expression:
         """transpose Can be overwritten by concrete expression classes to
         carry out the transposition lower down in the expression tree if possible.
+
+        Args:
+            make_transpose (Callable[[Expression], Expression]): Function that returns the transposed expression of the argument
 
         Returns:
             Expression: An equivalent expression with the transposition moved to the operand(s)

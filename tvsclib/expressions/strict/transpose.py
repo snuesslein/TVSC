@@ -8,7 +8,7 @@ def transpose(system:StrictSystem) -> StrictSystem:
         system (StrictSystem): System to transpose
 
     Returns:
-        StrictSystem: Transposition result
+        StrictSystem: Transposition result 
     """
     k = len(system.stages)
     stages = []

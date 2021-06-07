@@ -1,42 +1,44 @@
-from tvsclib.expressions.mixed.transpose import transpose
 import numpy as np
 from typing import Tuple
 from tvsclib.stage import Stage
 from tvsclib.strict_system import StrictSystem
-from tvsclib.mixed_system import MixedSystem
-from tvsclib.expressions.utils.convert import convert
-from tvsclib.expressions.mixed.multiply import multiply as multiplyMixed
 from tvsclib.expressions.strict.transpose import transpose as transposeStrict
+from tvsclib.expressions.const import Const
+from tvsclib.expressions.multiply import Multiply
 
-def invert(system:StrictSystem) -> MixedSystem:
+def invert(system:StrictSystem) -> Multiply:
     """invert Inversion in state space
 
     Args:
         system (StrictSystem): System to invert
 
     Returns:
-        MixedSystem: Inversion result
+        Multiply: Expression which computes inverese
     """
     if system.causal:
         T_ol, V_r = _rq_forward(system)
         V_l, T_o = _ql_backward(T_ol)
         T_o_inverse = _elementary_inversion(T_o)
-        result = multiplyMixed(
-            convert(transposeStrict(V_r), MixedSystem),
-            convert(T_o_inverse, MixedSystem))
-        result  = multiplyMixed(
+        result = Multiply(
+            Const(transposeStrict(V_r), "V_r'"),
+            Const(T_o_inverse, "T_o^-1"),
+            "V_r'*T_o^-1")
+        result = Multiply(
             result,
-            convert(transposeStrict(V_l), MixedSystem))
+            Const(transposeStrict(V_l),
+            result.name+"*V_l'"))
         return result
     T_ol, V_r = _rq_forward(transposeStrict(system))
     V_l, T_o = _ql_backward(T_ol)
     T_o_inverse = _elementary_inversion(T_o)
-    result = multiplyMixed(
-        convert(V_l, MixedSystem),
-        convert(transposeStrict(T_o_inverse), MixedSystem))
-    result = multiplyMixed(
+    result = Multiply(
+        Const(V_l, "V_l"),
+        Const(transposeStrict(T_o_inverse), "T_o'^-1"),
+        "V_l*T_o'^-1")
+    result = Multiply(
         result,
-        convert(V_r, MixedSystem))
+        Const(V_r, "V_r"),
+        result.name+"*V_r")
     return result
     
 
