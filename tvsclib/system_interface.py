@@ -20,6 +20,7 @@ class SystemInterface:
         Returns:
             Tuple[np.ndarray, np.ndarray]: Tuple containing the state vector and output vector
         """
+        raise NotImplementedError("compute not implemented")
 
     def to_matrix(self) -> np.ndarray:
         """to_matrix Create a matrix representation of the system.
@@ -27,7 +28,7 @@ class SystemInterface:
         Returns:
             np.ndarray: Matrix representation
         """
-        raise NotImplementedError("copy not implemented")
+        raise NotImplementedError("to_matrix not implemented")
         
     @property
     def dims_in(self) -> List[int]:
