@@ -11,6 +11,30 @@ class SystemInterface:
         """
         raise NotImplementedError("copy not implemented")
     
+    def is_reachable(self) -> bool:
+        """is_reachable Check if all internal states can be reached
+
+        Returns:
+            bool: True if system is fully reachable, false otherwise
+        """
+        raise NotImplementedError("is_reachable not implemented")
+    
+    def is_observable(self) -> bool:
+        """is_observable Check if all internal states can be infered from output
+
+        Returns:
+            bool: True if system is fully observable, false otherwise
+        """
+        raise NotImplementedError("is_observable not implemented")
+    
+    def is_minimal(self) -> bool:
+        """is_minimal Check if the system has a minimal state representation
+
+        Returns:
+            bool: True if system is minimal, false otherwise
+        """
+        return self.is_reachable() and self.is_observable()
+
     def compute(self, input:np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """compute Compute output of system for given input vector.
 

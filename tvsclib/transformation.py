@@ -1,8 +1,10 @@
-from typing import List, Callable
+from typing import List, Callable, TypeVar
 from tvsclib.stage import Stage
 from tvsclib.system_interface import SystemInterface
 from tvsclib.strict_system import StrictSystem
 from tvsclib.mixed_system import MixedSystem
+
+T = TypeVar('T',StrictSystem,MixedSystem)
 
 class Transformation:
     def __init__(
@@ -20,7 +22,7 @@ class Transformation:
         self.transform_causal = transform_causal
         self.transform_anticausal = transform_anticausal
 
-    def apply(self, system:SystemInterface) -> SystemInterface:
+    def apply(self, system:T) -> T:
         """apply Apply transformation to a system
 
         Args:

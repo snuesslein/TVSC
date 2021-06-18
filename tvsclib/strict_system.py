@@ -153,6 +153,136 @@ class StrictSystem(SystemInterface):
             np.vstack(x_vectors),
             np.vstack(y_vectors))
     
+    def is_reachable(self) -> bool:
+        """is_reachable Check if all internal states can be reached
+
+        Returns:
+            bool: True if system is fully reachable, false otherwise
+        """
+        reach_matricies = self.reachability_matricies()
+        for i in range(len(reach_matricies)):
+            if np.min(reach_matricies[i].shape) == 0:
+                # Numpy can not determine rank of zero-dimensional arrays
+                continue
+            rank = np.linalg.matrix_rank(reach_matricies[i])
+            if rank < reach_matricies[i].shape[0]:
+                return False
+        return True
+    
+    def is_observable(self) -> bool:
+        """is_observable Check if all internal states can be infered from output
+
+        Returns:
+            bool: True if system is fully observable, false otherwise
+        """
+        obs_matricies = self.observability_matricies()
+        for i in range(len(obs_matricies)):
+            if np.min(obs_matricies[i].shape) == 0:
+                # Numpy can not determine rank of zero-dimensional arrays
+                continue
+            rank = np.linalg.matrix_rank(obs_matricies[i])
+            if rank < obs_matricies[i].shape[1]:
+                return False
+        return True
+
+    def reachability_matricies(self) -> List[np.ndarray]:
+        """reachability_matricies Returns list of reachability matricies.
+        See TVSC Lecture slides Unit 5.5 page 2.
+
+        Returns:
+            List[np.ndarray]: Reachability matricies for each timestep
+        """
+        if self.causal:
+            return self._reachability_matricies_causal()
+        return self._reachability_matricies_anticausal()
+
+    def observability_matricies(self) -> List[np.ndarray]:
+        """observability_matricies Returns list of observability matricies.
+        See TVSC Lecture slides Unit 5.5 page 2.
+
+        Returns:
+            List[np.ndarray]: Observability matricies for each timestep
+        """
+        if self.causal:
+            return self._observability_matricies_causal()
+        return self._observability_matricies_anticausal()
+
+    def _observability_matricies_causal(self) -> List[np.ndarray]:
+        """_observability_matricies_causal Returns list of observability matricies.
+        See TVSC Lecture slides Unit 5.5 page 2.
+
+        Returns:
+            List[np.ndarray]: Observability matricies for each timestep
+        """
+        all_obs_matricies:List[np.ndarray] = [np.zeros((0,0))]
+        for k in range(1,len(self.stages)):
+            obs_matrix_parts = []
+            for i in range(k,len(self.stages)):
+                o = self.stages[i].C_matrix
+                for n in range(i-1,k-1,-1):
+                    o = o @ self.stages[n].A_matrix
+                obs_matrix_parts.append(o)
+            all_obs_matricies.append(np.vstack(obs_matrix_parts))
+        return all_obs_matricies
+    
+    def _reachability_matricies_causal(self) -> List[np.ndarray]:
+        """_reachability_matricies_causal Returns list of reachability matricies.
+        See TVSC Lecture slides Unit 5.5 page 2.
+
+        Returns:
+            List[np.ndarray]: Reachability matricies for each timestep
+        """
+        all_reach_matricies:List[np.ndarray] = [np.zeros((0,0))]
+        for k in range(1,len(self.stages)):
+            reach_matrix_parts = []
+            for i in range(k-1,-1,-1):
+                r = self.stages[i].B_matrix
+                for n in range(i+1,k):
+                    r = self.stages[n].A_matrix @ r
+                reach_matrix_parts.append(r)
+            reach_matrix_parts.reverse()
+            all_reach_matricies.append(np.hstack(reach_matrix_parts))
+        return all_reach_matricies
+    
+    def _observability_matricies_anticausal(self) -> List[np.ndarray]:
+        """_observability_matricies_anticausal Returns list of observability matricies.
+        See TVSC Lecture slides Unit 5.5 page 2.
+
+        Returns:
+            List[np.ndarray]: Observability matricies for each timestep
+        """
+        all_obs_matricies:List[np.ndarray] = [np.zeros((0,0))]
+        for k in range(1,len(self.stages)):
+            obs_matrix_parts = []
+            for i in range(k,len(self.stages)):
+                o = self.stages[len(self.stages) - i - 1].C_matrix
+                for n in range(i-1,k-1,-1):
+                    o = o @ self.stages[len(self.stages) - n -1].A_matrix
+                obs_matrix_parts.append(o)
+            all_obs_matricies.append(np.vstack(obs_matrix_parts))
+        all_obs_matricies.reverse()
+        return all_obs_matricies
+    
+    def _reachability_matricies_anticausal(self) -> List[np.ndarray]:
+        """_reachability_matricies_anticausal Returns list of reachability matricies.
+        See TVSC Lecture slides Unit 5.5 page 2.
+
+        Returns:
+            List[np.ndarray]: Reachability matricies for each timestep
+        """
+        all_reach_matricies:List[np.ndarray] = [np.zeros((0,0))]
+        for k in range(1,len(self.stages)):
+            reach_matrix_parts = []
+            for i in range(k-1,-1,-1):
+                r = self.stages[len(self.stages) - i - 1].B_matrix
+                for n in range(i+1,k):
+                    r = self.stages[len(self.stages) - n - 1].A_matrix @ r
+                reach_matrix_parts.append(r)
+            reach_matrix_parts.reverse()
+            all_reach_matricies.append(np.hstack(reach_matrix_parts))
+        all_reach_matricies.reverse()
+        return all_reach_matricies
+
     @staticmethod
     def zero(causal:bool, dims_in:List[int], dims_out:List[int]):
         """zero Generate empty system with given input/output dimensions

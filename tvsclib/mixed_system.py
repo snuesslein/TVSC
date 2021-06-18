@@ -53,6 +53,22 @@ class MixedSystem(SystemInterface):
             np.ndarray: Matrix representation
         """
         return self.causal_system.to_matrix() + self.anticausal_system.to_matrix()
+    
+    def is_observable(self) -> bool:
+        """is_observable Check if all internal states can be infered from output
+
+        Returns:
+            bool: True if system is fully observable, false otherwise
+        """
+        return self.causal_system.is_observable() and self.anticausal_system.is_observable()
+    
+    def is_reachable(self) -> bool:
+        """is_reachable Check if all internal states can be reached
+
+        Returns:
+            bool: True if system is fully reachable, false otherwise
+        """
+        return self.causal_system.is_reachable() and self.anticausal_system.is_reachable()
 
     def compute(self, input:np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """compute Compute output of system for given input vector.
