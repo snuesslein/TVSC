@@ -282,6 +282,217 @@ class StrictSystem(SystemInterface):
             all_reach_matricies.append(np.hstack(reach_matrix_parts))
         all_reach_matricies.reverse()
         return all_reach_matricies
+    
+    def transpose(self) -> StrictSystem:
+        """transpose Transposed system
+
+        Returns:
+            StrictSystem: Transposition result 
+        """
+        k = len(self.stages)
+        stages = []
+        for i in range(k):
+            stages.append(Stage(
+                self.stages[i].A_matrix.transpose().copy(),
+                self.stages[i].C_matrix.transpose().copy(),
+                self.stages[i].B_matrix.transpose().copy(),
+                self.stages[i].D_matrix.transpose().copy()
+            ))
+        return StrictSystem(causal=not self.causal, stages=stages)
+
+    def outer_inner_factorization(self) -> Tuple[StrictSystem, StrictSystem]:
+        """outer_inner_factorization Produces an outer inner factorization of the system.
+        Outer factor is causaly invertible, inner factor is unitary.
+
+        Returns:
+            Tuple[StrictSystem, StrictSystem]: Outer and inner factor
+        """
+        if self.causal:
+            return StrictSystem._rq_forward(self)
+        V,To = StrictSystem._ql_backward(self.transpose())
+        return (To.transpose(), V.transpose())
+    
+    def inner_outer_factorization(self) -> Tuple[StrictSystem, StrictSystem]:
+        """inner_outer_factorization Produces an inner outer factorization of the system.
+        Inner factor is unitary, outer factor is causaly invertible.
+
+        Returns:
+            Tuple[StrictSystem, StrictSystem]: Inner and outer factor
+        """
+        if self.causal:
+            return StrictSystem._ql_backward(self)
+        To,V = StrictSystem._rq_forward(self.transpose())
+        return (V.transpose(), To.transpose())
+
+    def arrow_reversal(self) -> StrictSystem:
+        """arrow_reversal Returns an inverse of the system, only works if the system is outer
+
+        Returns:
+            StrictSystem: Inverse of the system
+        """
+        k = len(self.stages)
+        stages_inverse = []
+        for i in range(k):
+            inverse_D = None
+            if self.stages[i].D_matrix.shape[0] > self.stages[i].D_matrix.shape[1]:
+                inverse_D = np.linalg.inv(self.stages[i].D_matrix.transpose() \
+                    @ self.stages[i].D_matrix) @ self.stages[i].D_matrix.transpose()
+            else:
+                inverse_D = self.stages[i].D_matrix.transpose() \
+                    @ np.linalg.inv(self.stages[i].D_matrix @ self.stages[i].D_matrix.transpose())
+            inverse_B = self.stages[i].B_matrix @ inverse_D
+            stages_inverse.append(Stage(
+                self.stages[i].A_matrix - inverse_B @ self.stages[i].C_matrix,
+                inverse_B,
+                -inverse_D @ self.stages[i].C_matrix,
+                inverse_D))
+        return StrictSystem(
+            causal=self.causal,
+            stages=stages_inverse)
+
+    @staticmethod
+    def _rq_forward(system:StrictSystem) -> Tuple[StrictSystem, StrictSystem]:
+        """_rq_forward Produces a RQ factorization of a causal system in state space
+
+        Args:
+            system (StrictSystem): Causal system which shall be factorized
+
+        Returns:
+            Tuple[StrictSystem, StrictSystem]: Causal R factor and causal Q factor
+        """
+        k = len(system.stages)
+        Y_matricies = [np.zeros((0,0))]
+        stages_r = []
+        stages_q = []
+        for i in range(k):
+            X_matrix = np.vstack([
+                np.hstack([
+                    system.stages[i].A_matrix @ Y_matricies[i],
+                    system.stages[i].B_matrix
+                ]),
+                np.hstack([
+                    system.stages[i].C_matrix @ Y_matricies[i],
+                    system.stages[i].D_matrix
+                ])
+            ])
+            # Econ RQ-Decomposition
+            X_matrix = X_matrix[
+                range(X_matrix.shape[0]-1,-1,-1),:]
+            Q_matrix, R_matrix = np.linalg.qr(
+                X_matrix.transpose(), mode='reduced')
+            Q_matrix = Q_matrix.transpose()
+            Q_matrix = Q_matrix[
+                range(Q_matrix.shape[0]-1,-1,-1),:]
+            R_matrix = R_matrix.transpose()
+            R_matrix = R_matrix[
+                range(R_matrix.shape[0]-1,-1,-1),:]
+            R_matrix = R_matrix[
+                :,range(R_matrix.shape[1]-1,-1,-1)]
+                
+            no_rows_Y = R_matrix.shape[0] - system.stages[i].D_matrix.shape[0]
+            no_cols_Y = R_matrix.shape[1] - system.stages[i].D_matrix.shape[0]
+            no_cols_Y = max(0, no_cols_Y)
+            Y_matricies.append(R_matrix[0:no_rows_Y,:][:,0:no_cols_Y])
+
+            Br_matrix = R_matrix[0:no_rows_Y,:][:,no_cols_Y:]
+            Dr_matrix = R_matrix[no_rows_Y:,:][:,no_cols_Y:]
+
+            Dq_matrix = Q_matrix[
+                Q_matrix.shape[0]-Dr_matrix.shape[1]:,:][
+                    :,Q_matrix.shape[1]-system.stages[i].D_matrix.shape[1]:]
+            Bq_matrix = Q_matrix[
+                0:Q_matrix.shape[0]-Dr_matrix.shape[1],:][
+                    :,Q_matrix.shape[1]-system.stages[i].D_matrix.shape[1]:]
+            Cq_matrix = Q_matrix[
+                Q_matrix.shape[0]-Dr_matrix.shape[1]:,:][
+                    :,0:Q_matrix.shape[1]-system.stages[i].D_matrix.shape[1]]
+            Aq_matrix = Q_matrix[
+                0:Q_matrix.shape[0]-Dr_matrix.shape[1],:][
+                    :,0:Q_matrix.shape[1]-system.stages[i].D_matrix.shape[1]]
+            
+            stages_r.append(Stage(
+                system.stages[i].A_matrix,
+                Br_matrix,
+                system.stages[i].C_matrix,
+                Dr_matrix))
+            stages_q.append(Stage(
+                Aq_matrix, Bq_matrix, Cq_matrix, Dq_matrix))
+        return (
+            StrictSystem(causal=True,stages=stages_r),
+            StrictSystem(causal=True,stages=stages_q))
+
+    @staticmethod
+    def _ql_backward(system:StrictSystem) -> Tuple[StrictSystem, StrictSystem]:
+        """_ql_backward Produces a QL factorization of a causal system in state space
+
+        Args:
+            system (StrictSystem): Causal system which shall be factorized
+
+        Returns:
+            Tuple[StrictSystem, StrictSystem]: Causal Q factor and causal L factor
+        """
+        k = len(system.stages)
+        Y_matricies = [np.zeros((0,0))] * (k+1)
+        stages_q = []
+        stages_l = []
+        for i in range(k-1,-1,-1):
+            X_matrix = np.vstack([
+                np.hstack([
+                    Y_matricies[i+1] @ system.stages[i].A_matrix,
+                    Y_matricies[i+1] @ system.stages[i].B_matrix
+                ]),
+                np.hstack([
+                    system.stages[i].C_matrix,
+                    system.stages[i].D_matrix
+                ])
+            ])
+            # Econ QL-Decomposition
+            X_matrix = X_matrix.transpose()
+            X_matrix = X_matrix[
+                range(X_matrix.shape[0]-1,-1,-1),:]
+            Q_matrix, L_matrix = np.linalg.qr(
+                X_matrix.transpose(), mode='reduced')
+            Q_matrix = Q_matrix[
+                :,range(Q_matrix.shape[1]-1,-1,-1)]
+            L_matrix = L_matrix[
+                range(L_matrix.shape[0]-1,-1,-1),:]
+            L_matrix = L_matrix[
+                :,range(L_matrix.shape[1]-1,-1,-1)]
+            
+            no_rows_Y = L_matrix.shape[0] - system.stages[i].D_matrix.shape[1]
+            no_rows_Y = max(0, no_rows_Y)
+            no_cols_Y = system.stages[i].A_matrix.shape[1]
+
+            Y_matricies[i] = L_matrix[0:no_rows_Y,:][:,0:no_cols_Y]
+
+            Cl_matrix = L_matrix[no_rows_Y:,:][:,0:no_cols_Y]
+            Dl_matrix = L_matrix[no_rows_Y:,:][:,no_cols_Y:]
+
+            Dq_matrix = Q_matrix[
+                Q_matrix.shape[0]-system.stages[i].D_matrix.shape[0]:,:][
+                    :,Q_matrix.shape[1]-Dl_matrix.shape[0]:]
+            Bq_matrix = Q_matrix[
+                0:Q_matrix.shape[0]-system.stages[i].D_matrix.shape[0],:][
+                    :,Q_matrix.shape[1]-Dl_matrix.shape[0]:]
+            Cq_matrix = Q_matrix[
+                Q_matrix.shape[0]-system.stages[i].D_matrix.shape[0]:,:][
+                    :,0:Q_matrix.shape[1]-Dl_matrix.shape[0]]
+            Aq_matrix = Q_matrix[
+                0:Q_matrix.shape[0]-system.stages[i].D_matrix.shape[0],:][
+                    :,0:Q_matrix.shape[1]-Dl_matrix.shape[0]]
+            
+            stages_l.append(Stage(
+                system.stages[i].A_matrix,
+                system.stages[i].B_matrix,
+                Cl_matrix,
+                Dl_matrix))
+            stages_q.append(Stage(
+                Aq_matrix, Bq_matrix, Cq_matrix, Dq_matrix))
+        stages_l.reverse()
+        stages_q.reverse()
+        return (
+            StrictSystem(causal=True,stages=stages_q),
+            StrictSystem(causal=True,stages=stages_l))
 
     @staticmethod
     def zero(causal:bool, dims_in:List[int], dims_out:List[int]):
