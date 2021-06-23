@@ -5,17 +5,21 @@ from tvsclib.expression import Expression
 from tvsclib.system_interface import SystemInterface
 from tvsclib.expressions.strict.invert import invert as invertStrict
 from tvsclib.expressions.mixed.invert import invert as invertMixed
+from tvsclib.expressions.const import Const
 
 class Invert(Expression):
-    def __init__(self, operand:Expression, name:str = "inversion"):
+    def __init__(self, operand:Expression, name:str = "inversion", compile_to_const:bool = False):
         """__init__ Constructor
 
         Args:
             operand (Expression): Operand expression
             name (str, optional): Name of the expression. Defaults to "inversion".
+            compile_to_const (bool, optional): Set to True if compile shall generate a Const Expression.
+                Otherwise the inversion gets compiled into a Multiply Expression. Defaults to False.
         """
         super().__init__(name, [operand])
         self.operand = operand
+        self.compile_to_const = compile_to_const
     
     def compute(self, input:np.ndarray) -> np.ndarray:
         """compute Compute output of expression for given input vector.
@@ -27,7 +31,6 @@ class Invert(Expression):
             np.ndarray: Output vector
         """
         system = self.operand.realize()
-
         if type(system) is MixedSystem:
             return invertMixed(system).compute(input)
         else:
@@ -44,7 +47,7 @@ class Invert(Expression):
             Expression: An equivalent expression with the transposition moved to the operand(s)
             if possible, None otherwise
         """
-        return Invert(make_transpose(self.operand), "invert.transpose:"+self.name)
+        return Invert(make_transpose(self.operand))
     
     def invert(self, make_inverse:Callable[[Expression], Expression]) -> Expression:
         """invert Can be overwritten by concrete expression classes to
@@ -71,22 +74,36 @@ class Invert(Expression):
             SystemInterface: State space system
         """
         system = self.operand.realize()
-
         if type(system) is MixedSystem:
             return invertMixed(system).realize()
         else:
             return invertStrict(system).realize()
         
+    def simplify(self) -> Expression:
+        """simplify Returns a simplified expression tree
+
+        Returns:
+            Expression: Simplified expression tree
+        """
+        expr = self.operand.simplify()
+        inv = expr.invert(lambda operand: Invert(operand).simplify())
+        if inv is not None:
+            return inv.simplify()
+        return Invert(expr.simplify())
     
     def compile(self) -> Expression:
-        """compile Returns an efficiently computeable expression tree
+        """compile Returns a directly computeable expression tree
 
         Returns:
             Expression: Expression tree which may needs less memory and time
             to compute
         """
-        expr = self.operand.compile()
-        inv = expr.invert(lambda operand: Invert(operand,"invert.compile:"+operand.name))
-        if inv is not None:
-            return inv.compile()
-        return Invert(expr, "compile:"+self.name)
+        if self.compile_to_const:
+            inv = Invert(self.operand.compile())
+            return Const(inv.realize(), f"({self.operand.name})^-1")
+        system = self.operand.realize()
+        if type(system) is MixedSystem:
+            return invertMixed(system)
+        else:
+            return invertStrict(system)
+

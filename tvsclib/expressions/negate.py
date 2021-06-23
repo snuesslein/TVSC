@@ -39,7 +39,7 @@ class Negate(Expression):
             Expression: An equivalent expression with the transposition moved to the operand(s)
             if possible, None otherwise
         """
-        return Negate(make_transpose(self.operand), "negate.transpose:"+self.name)
+        return Negate(make_transpose(self.operand))
     
     def invert(self, make_inverse:Callable[[Expression], Expression]) -> Expression:
         """invert Can be overwritten by concrete expression classes to
@@ -57,7 +57,7 @@ class Negate(Expression):
             Expression: An equivalent expression with the inversion moved to the operand(s)
             if possible, None otherwise
         """
-        return Negate(make_inverse(self.operand), "negate.invert:"+self.name)
+        return Negate(make_inverse(self.operand))
     
     def realize(self) -> SystemInterface:
         """realize Generates a state space system from the expression tree
@@ -66,17 +66,24 @@ class Negate(Expression):
             SystemInterface: State space system
         """
         system = self.operand.realize()
-
         if type(system) is MixedSystem:
             return negateMixed(system)
         else:
             return negateStrict(system)        
     
+    def simplify(self) -> Expression:
+        """simplify Returns a simplified expression tree
+
+        Returns:
+            Expression: Simplified expression tree
+        """
+        return Negate(self.operand.simplify())
+
     def compile(self) -> Expression:
-        """compile Returns an efficiently computeable expression tree
+        """compile Returns a directly computeable expression tree
 
         Returns:
             Expression: Expression tree which may needs less memory and time
             to compute
         """
-        return Negate(self.operand.compile(), "compile:"+self.name)
+        return Negate(self.operand.compile())

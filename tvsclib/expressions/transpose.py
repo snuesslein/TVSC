@@ -43,6 +43,24 @@ class Transpose(Expression):
         """
         return self.operand
     
+    def invert(self, make_inverse:Callable[[Expression], Expression]) -> Expression:
+        """invert Can be overwritten by concrete expression classes to
+        carry out the inversion lower down in the expression tree if possible.
+
+        E.g. ((A + B) * C)^1 -> C^-1 * (A + B)^-1. Since we are usually loosing minimality
+        when doing additions or multiplications the state space gets rather large.
+        Computing the inverse on this "bloated" state space is computational costly. Therefor
+        it is better to carry out the inversion earlier on "more minimal" systems.
+
+        Args:
+            make_inverse (Callable[[Expression], Expression]): Function that returns the inverse expression of the argument
+
+        Returns:
+            Expression: An equivalent expression with the inversion moved to the operand(s)
+            if possible, None otherwise
+        """
+        return None
+    
     def realize(self) -> SystemInterface:
         """realize Generates a state space system from the expression tree
 
@@ -50,22 +68,29 @@ class Transpose(Expression):
             SystemInterface: State space system
         """
         system = self.operand.realize()
-
         if type(system) is MixedSystem:
             return transposeMixed(system)
         else:
             return transposeStrict(system)
         
-    
+    def simplify(self) -> Expression:
+        """simplify Returns a simplified expression tree
+
+        Returns:
+            Expression: Simplified expression tree
+        """
+        expr = self.operand.simplify()
+        trp = expr.transpose(lambda operand: Transpose(operand).simplify())
+        if trp is not None:
+            return trp.simplify()
+        return Transpose(expr.simplify())
+
     def compile(self) -> Expression:
-        """compile Returns an efficiently computeable expression tree
+        """compile Returns a directly computeable expression tree
 
         Returns:
             Expression: Expression tree which may needs less memory and time
             to compute
         """
-        expr = self.operand.compile()
-        trp = expr.transpose(lambda operand: Transpose(operand, "transpose.compile:"+operand.name))
-        if trp is not None:
-            return trp.compile()
-        return Transpose(expr, "compile:"+self.name)
+        trp = Transpose(self.operand.compile())
+        return Const(trp.realize(), f"({self.operand.name})'")

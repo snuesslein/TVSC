@@ -1,4 +1,5 @@
 from __future__ import annotations
+from copy import copy
 import numpy as np
 from typing import List, Callable
 from tvsclib.system_interface import SystemInterface
@@ -14,6 +15,33 @@ class Expression:
         self.name = name
         self.childs = childs
     
+    def post_realize(self, post_function:Callable[[SystemInterface], SystemInterface], recursive:bool = False) -> Expression:
+        """post_realize Inserts a post-processing step for the realization method.
+        Can for example be used to reduce the result of an expression to a minimal system via
+        expression = expression.post_realize(lambda s: Reduction().apply(s))
+
+        Args:
+            post_function (Callable[[SystemInterface], SystemInterface]): Post-processing function
+            recursive (bool, optional): If set to True the same postprocessing is applied to the child expressions. Defaults to False.
+
+        Returns:
+            Expression: Expression containing post-processing step
+        """
+        if recursive:
+            for child in self.childs:
+                child.post_realize(post_function, True)
+        expr = copy(self)
+        expr.realize = lambda: post_function(self.realize())
+        return expr
+
+    def compile(self) -> Expression:
+        """compile Returns a directly computeable expression tree
+
+        Returns:
+            Expression: Expression tree which may needs less memory and time
+            to compute
+        """
+        raise NotImplementedError("compile not implemented")
 
     def compute(self, input:np.ndarray) -> np.ndarray:
         """compute Compute output of expression for given input vector.
@@ -34,14 +62,13 @@ class Expression:
         """
         raise NotImplementedError("realize not implemented")
     
-    def compile(self) -> Expression:
-        """compile Returns an efficiently computeable expression tree
+    def simplify(self) -> Expression:
+        """simplify Returns a simplified expression tree
 
         Returns:
-            Expression: Expression tree which may needs less memory and time
-            to compute
+            Expression: Simplified expression tree
         """
-        raise NotImplementedError("compile not implemented")
+        raise NotImplementedError("simplify not implemented")
     
     def invert(self, make_inverse:Callable[[Expression], Expression]) -> Expression:
         """invert Can be overwritten by concrete expression classes to

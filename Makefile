@@ -1,4 +1,8 @@
-all: lint docs test dist 
+all: install lint docs test dist 
+
+.PHONY: install
+install:
+	python setup.py install
 
 .IGNORE: lint
 .PHONY: lint

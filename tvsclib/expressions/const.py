@@ -33,8 +33,16 @@ class Const(Expression):
         """
         return self.operand
     
+    def simplify(self) -> Expression:
+        """simplify Returns a simplified expression tree
+
+        Returns:
+            Expression: Simplified expression tree
+        """
+        return self
+    
     def compile(self) -> Expression:
-        """compile Returns an efficiently computeable expression tree
+        """compile Returns a directly computeable expression tree
 
         Returns:
             Expression: Expression tree which may needs less memory and time

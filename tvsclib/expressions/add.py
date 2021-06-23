@@ -43,7 +43,7 @@ class Add(Expression):
             Expression: An equivalent expression with the transposition moved to the operand(s)
             if possible, None otherwise
         """
-        return Add(make_transpose(self.lhs), make_transpose(self.rhs), "add.transpose:"+self.name)
+        return Add(make_transpose(self.lhs), make_transpose(self.rhs))
     
     def realize(self) -> SystemInterface:
         """realize Generates a state space system from the expression tree
@@ -53,21 +53,27 @@ class Add(Expression):
         """
         system_lhs = self.lhs.realize()
         system_rhs = self.rhs.realize()
-
         if type(system_lhs) is StrictSystem and type(system_rhs) is StrictSystem \
             and system_lhs.causal == system_rhs.causal:
             return addStrict(system_lhs, system_rhs)
         else:
             return addMixed(
                 convert(system_lhs, MixedSystem),
-                convert(system_rhs, MixedSystem))
-        
+                convert(system_rhs, MixedSystem))        
     
+    def simplify(self) -> Expression:
+        """simplify Returns a simplified expression tree
+
+        Returns:
+            Expression: Simplified expression tree
+        """
+        return Add(self.lhs.simplify(), self.rhs.simplify())
+
     def compile(self) -> Expression:
-        """compile Returns an efficiently computeable expression tree
+        """compile Returns a directly computeable expression tree
 
         Returns:
             Expression: Expression tree which may needs less memory and time
             to compute
         """
-        return Add(self.lhs.compile(), self.rhs.compile(), "compile:"+self.name)
+        return Add(self.lhs.compile(), self.rhs.compile())

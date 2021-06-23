@@ -43,7 +43,7 @@ class Multiply(Expression):
             Expression: An equivalent expression with the transposition moved to the operand(s)
             if possible, None otherwise
         """
-        return Multiply(make_transpose(self.rhs), make_transpose(self.lhs), "multiply.transpose:"+self.name)
+        return Multiply(make_transpose(self.rhs), make_transpose(self.lhs))
     
     def invert(self, make_inverse:Callable[[Expression], Expression]) -> Expression:
         """invert Can be overwritten by concrete expression classes to
@@ -61,7 +61,7 @@ class Multiply(Expression):
             Expression: An equivalent expression with the inversion moved to the operand(s)
             if possible, None otherwise
         """
-        return Multiply(make_inverse(self.rhs), make_inverse(self.lhs),"multiply.invert:"+self.name)
+        return Multiply(make_inverse(self.rhs), make_inverse(self.lhs))
     
     def realize(self) -> SystemInterface:
         """realize Generates a state space system from the expression tree
@@ -71,7 +71,6 @@ class Multiply(Expression):
         """
         system_lhs = self.lhs.realize()
         system_rhs = self.rhs.realize()
-
         if type(system_lhs) is StrictSystem and type(system_rhs) is StrictSystem \
             and system_lhs.causal == system_rhs.causal:
             return multiplyStrict(system_lhs, system_rhs)
@@ -80,12 +79,19 @@ class Multiply(Expression):
                 convert(system_lhs, MixedSystem),
                 convert(system_rhs, MixedSystem))
         
-    
+    def simplify(self) -> Expression:
+        """simplify Returns a simplified expression tree
+
+        Returns:
+            Expression: Simplified expression tree
+        """
+        return Multiply(self.lhs.simplify(), self.rhs.simplify())
+
     def compile(self) -> Expression:
-        """compile Returns an efficiently computeable expression tree
+        """compile Returns a directly computeable expression tree
 
         Returns:
             Expression: Expression tree which may needs less memory and time
             to compute
         """
-        return Multiply(self.lhs.compile(), self.rhs.compile(),"compile:"+self.name)
+        return Multiply(self.lhs.compile(), self.rhs.compile())
