@@ -63,18 +63,23 @@ class StrictSystem(SystemInterface):
         """
         return [el.dim_state for el in self.stages]
 
-    def compute(self, input:np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        """compute Compute output of system for given input vector
+    def compute(
+        self, input:np.ndarray, start_index:int=0,
+        time_steps:int=-1, initial_state:np.ndarray=np.zeros((0,1))) -> Tuple[np.ndarray, np.ndarray]:
+        """compute Compute output of system for given input vector.
 
         Args:
             input (np.ndarray): Input vector
+            start_index (int, optional): Index at which the computation shall start. Defaults to 0.
+            time_steps (int, optional): Number of time steps which shall be computed, -1 means all. Defaults to -1.
+            initial_state (np.ndarray, optional): Initial state of the system.
 
         Returns:
             Tuple[np.ndarray, np.ndarray]: Tuple containing the state vector and output vector
         """
         if self.causal:
-            return self._compute_causal(input)
-        return self._compute_anticausal(input)
+            return self._compute_causal(input, start_index, time_steps, initial_state)
+        return self._compute_anticausal(input, start_index, time_steps, initial_state)
     
     def to_matrix(self) -> np.ndarray:
         """to_matrix Create a matrix representation of the strict system.
@@ -104,45 +109,55 @@ class StrictSystem(SystemInterface):
 
         return D + C@np.linalg.pinv(np.eye(A.shape[0]) - Z@A)@Z@B
     
-    def _compute_causal(self, input:np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def _compute_causal(
+        self, input:np.ndarray, start_index:int=0,
+        time_steps:int=-1, initial_state:np.ndarray=np.zeros((0,1))) -> Tuple[np.ndarray, np.ndarray]:
         """_compute_causal Compute output of causal system for given input vector
 
         Args:
             input (np.ndarray): Input vector
+            start_index (int, optional): Index at which the computation shall start. Defaults to 0.
+            time_steps (int, optional): Number of time steps which shall be computed. Defaults to -1.
+            initial_state (np.ndarray, optional): Initial state of the system.
 
         Returns:
             Tuple[np.ndarray, np.ndarray]: Tuple containing the state vector and output vector
         """
-        k = len(self.stages)
-        x_vectors = [np.zeros((0,1))]
+        k = time_steps if time_steps != -1 else len(self.stages) - start_index
+        x_vectors = [initial_state]
         y_vectors = []
         in_index = 0
         for i in range(k):
-            stage = self.stages[i]
+            stage = self.stages[i + start_index]
             in_index_next = in_index + stage.dim_in
             u_in = input[in_index:in_index_next]
             in_index = in_index_next
             x_vectors.append(stage.A_matrix@x_vectors[i] + stage.B_matrix@u_in)
             y_vectors.append(stage.C_matrix@x_vectors[i] + stage.D_matrix@u_in)
         return (
-            np.vstack(x_vectors),
+            np.vstack(x_vectors[1:]),
             np.vstack(y_vectors))
     
-    def _compute_anticausal(self, input:np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def _compute_anticausal(
+        self, input:np.ndarray, start_index:int=0,
+        time_steps:int=-1, initial_state:np.ndarray=np.zeros((0,1))) -> Tuple[np.ndarray, np.ndarray]:
         """_compute_anticausal Compute output of anticausal system for given input vector
 
         Args:
             input (np.ndarray): Input vector
+            start_index (int, optional): Index at which the computation shall start. Defaults to 0.
+            time_steps (int, optional): Number of time steps which shall be computed. Defaults to -1.
+            initial_state (np.ndarray, optional): Initial state of the system.
 
         Returns:
             Tuple[np.ndarray, np.ndarray]: Tuple containing the state vector and output vector
         """
-        k = len(self.stages)
-        x_vectors = [np.zeros((0,1))]*(k+1)
+        k = time_steps if time_steps != -1 else len(self.stages) - start_index
+        x_vectors = [initial_state]*(k+1)
         y_vectors = []
         in_index = len(input)
         for i in range(k-1,-1,-1):
-            stage = self.stages[i]
+            stage = self.stages[i + start_index]
             in_index_next = in_index - stage.dim_in
             u_in = input[in_index_next:in_index]
             in_index = in_index_next
@@ -150,7 +165,7 @@ class StrictSystem(SystemInterface):
             y_vectors.append(stage.C_matrix@x_vectors[i+1] + stage.D_matrix@u_in)
         y_vectors.reverse()
         return (
-            np.vstack(x_vectors),
+            np.vstack(x_vectors[0:k]),
             np.vstack(y_vectors))
     
     def is_reachable(self) -> bool:
