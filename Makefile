@@ -20,3 +20,4 @@ dist:
 .PHONY: docs
 docs:
 	python setup.py build_sphinx -c docs/
+	sensible-browser build/sphinx/html/index.html
