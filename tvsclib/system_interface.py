@@ -35,11 +35,16 @@ class SystemInterface:
         """
         return self.is_reachable() and self.is_observable()
 
-    def compute(self, input:np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def compute(
+        self, input:np.ndarray, start_index:int=0,
+        time_steps:int=-1, initial_state:np.ndarray=np.zeros((0,1))) -> Tuple[np.ndarray, np.ndarray]:
         """compute Compute output of system for given input vector.
 
         Args:
             input (np.ndarray): Input vector
+            start_index (int, optional): Index at which the computation shall start. Defaults to 0.
+            time_steps (int, optional): Number of time steps which shall be computed, -1 means all. Defaults to -1.
+            initial_state (np.ndarray, optional): Initial state of the system.
 
         Returns:
             Tuple[np.ndarray, np.ndarray]: Tuple containing the state vector and output vector
