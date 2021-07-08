@@ -9,7 +9,7 @@ from tvsclib.expressions.mixed.add import add as addMixed
 from tvsclib.expressions.utils.convert import convert
 
 class Add(Expression):
-    def __init__(self, lhs:Expression, rhs:Expression, name:str = "addition"):
+    def __init__(self, lhs:Expression, rhs:Expression, name:str = "+"):
         """__init__ Constructor
 
         Args:

@@ -9,7 +9,7 @@ from tvsclib.expressions.utils.convert import convert
 from tvsclib.strict_system import StrictSystem
 
 class Multiply(Expression):
-    def __init__(self, lhs:Expression, rhs:Expression, name:str = "multiplication"):
+    def __init__(self, lhs:Expression, rhs:Expression, name:str = "*"):
         """__init__ Constructor
 
         Args:

@@ -8,7 +8,7 @@ from tvsclib.expressions.mixed.transpose import transpose as transposeMixed
 from tvsclib.expressions.const import Const
 
 class Transpose(Expression):
-    def __init__(self, operand:Expression, name:str = "transposition"):
+    def __init__(self, operand:Expression, name:str = "^T"):
         """__init__ Constructor
 
         Args:

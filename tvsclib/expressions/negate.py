@@ -7,7 +7,7 @@ from tvsclib.expressions.strict.negate import negate as negateStrict
 from tvsclib.expressions.mixed.negate import negate as negateMixed
 
 class Negate(Expression):
-    def __init__(self, operand:Expression, name:str = "negation"):
+    def __init__(self, operand:Expression, name:str = "-1"):
         """__init__ Constructor
 
         Args:

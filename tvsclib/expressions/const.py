@@ -3,7 +3,7 @@ from tvsclib.system_interface import SystemInterface
 from tvsclib.expression import Expression
 
 class Const(Expression):
-    def __init__(self, operand:SystemInterface, name:str = "constant"):
+    def __init__(self, operand:SystemInterface, name:str = "const"):
         """__init__ Constructor
 
         Args:
