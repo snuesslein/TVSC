@@ -70,19 +70,27 @@ class MixedSystem(SystemInterface):
         """
         return self.causal_system.is_reachable() and self.anticausal_system.is_reachable()
 
-    def compute(self, input:np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def compute(
+        self, input:np.ndarray, start_index:int=0,
+        time_steps:int=-1, initial_state:np.ndarray=np.zeros((0,1))) -> Tuple[np.ndarray, np.ndarray]:
         """compute Compute output of system for given input vector.
         The states of the causal and anticausal system are returned in stacked
-        fashion [x_causal,x_anticausal]'.
+        fashion as [x_causal',x_anticausal']'.
 
         Args:
             input (np.ndarray): Input vector
+            start_index (int, optional): Index at which the computation shall start. Defaults to 0.
+            time_steps (int, optional): Number of time steps which shall be computed, -1 means all. Defaults to -1.
+            initial_state (np.ndarray, optional): Initial state of the system, causal and anticausal
+            state are stacked as [x0_causal',x0_anticausal']'.
 
         Returns:
             Tuple[np.ndarray, np.ndarray]: Tuple containing the state vector and output vector
         """
-        x_causal,y_causal = self.causal_system.compute(input)
-        x_anticausal,y_anticausal = self.anticausal_system.compute(input)
+        x0_causal = initial_state[0:self.causal_system.stages[start_index].A_matrix.shape[1]]
+        x0_anticausal = initial_state[self.causal_system.stages[start_index].A_matrix.shape[1]:]
+        x_causal,y_causal = self.causal_system.compute(input,start_index,time_steps,x0_causal)
+        x_anticausal,y_anticausal = self.anticausal_system.compute(input,start_index,time_steps,x0_anticausal)
         x_result = np.vstack([
             x_causal, x_anticausal
         ])

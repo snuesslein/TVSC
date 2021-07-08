@@ -11,10 +11,11 @@ setup(
     author='ge37bov@mytum.de',
     license='MIT',
     install_requires=required,
-    setup_requires=['setuptools-lint',
+    setup_requires=['pytest-runner',
+                    'setuptools-lint',
                     'Sphinx',
                     'sphinx-rtd-theme',
                     'sphinxcontrib-apidoc'],
-    tests_require=['pytest==4.4.1'],
+    tests_require=['pytest'],
     test_suite='tests',
 )
