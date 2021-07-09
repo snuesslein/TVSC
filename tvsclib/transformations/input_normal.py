@@ -1,7 +1,6 @@
 import numpy as np
 from typing import List
 
-from numpy.lib.index_tricks import s_
 from tvsclib.stage import Stage
 from tvsclib.transformation import Transformation
 
