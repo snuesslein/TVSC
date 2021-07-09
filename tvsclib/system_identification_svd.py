@@ -7,7 +7,7 @@ from tvsclib.system_identification_interface import SystemIdentificationInterfac
 
 class SystemIdentificationSVD(SystemIdentificationInterface):
     def __init__(self, toeplitz: ToeplitzOperator, form:CanonicalForm = CanonicalForm.BALANCED, epsilon:float = 0, relative:bool = True):
-        """__init__ [summary]
+        """__init__ This class can be used to identify a state-space system from a toeplitz operator.
 
         Args:
             toeplitz (ToeplitzOperator): Toeplitz operator which shall be decomposed.
