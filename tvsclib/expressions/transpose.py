@@ -80,10 +80,10 @@ class Transpose(Expression):
             Expression: Simplified expression tree
         """
         expr = self.operand.simplify()
-        trp = expr.transpose(lambda operand: Transpose(operand).simplify())
+        trp = expr.transpose(lambda operand: Transpose(operand))
         if trp is not None:
             return trp.simplify()
-        return Transpose(expr.simplify())
+        return Transpose(expr)
 
     def compile(self) -> Expression:
         """compile Returns a directly computeable expression tree
