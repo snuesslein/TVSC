@@ -86,10 +86,10 @@ class Invert(Expression):
             Expression: Simplified expression tree
         """
         expr = self.operand.simplify()
-        inv = expr.invert(lambda operand: Invert(operand).simplify())
+        inv = expr.invert(lambda operand: Invert(operand))
         if inv is not None:
             return inv.simplify()
-        return Invert(expr.simplify())
+        return Invert(expr)
     
     def compile(self) -> Expression:
         """compile Returns a directly computeable expression tree
