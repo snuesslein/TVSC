@@ -181,7 +181,7 @@ class StrictSystem(SystemInterface):
         return True
     
     def is_observable(self) -> bool:
-        """is_observable Check if all internal states can be infered from output
+        """is_observable Check if internal states can be infered from output
 
         Returns:
             bool: True if system is fully observable, false otherwise
