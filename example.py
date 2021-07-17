@@ -64,6 +64,7 @@ realized_expression_reduced = simplified_expression\
     .post_realize(lambda s: Reduction().apply(s), True)\
         .realize()
 
+print(f"Is system minimal: {realized_expression.is_minimal()}")
 print(f"Is system minimal: {realized_expression_reduced.is_minimal()}")
 
 # %% Generate graphs

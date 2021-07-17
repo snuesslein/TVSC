@@ -176,11 +176,7 @@ class StrictSystem(SystemInterface):
         """
         reach_matricies = self.reachability_matricies()
         for i in range(len(reach_matricies)):
-            if np.min(reach_matricies[i].shape) == 0:
-                # Numpy can not determine rank of zero-dimensional arrays
-                continue
-            rank = np.linalg.matrix_rank(reach_matricies[i])
-            if rank < reach_matricies[i].shape[0]:
+            if np.linalg.det(reach_matricies[i] @ reach_matricies[i].transpose()) == 0:
                 return False
         return True
     
@@ -192,11 +188,7 @@ class StrictSystem(SystemInterface):
         """
         obs_matricies = self.observability_matricies()
         for i in range(len(obs_matricies)):
-            if np.min(obs_matricies[i].shape) == 0:
-                # Numpy can not determine rank of zero-dimensional arrays
-                continue
-            rank = np.linalg.matrix_rank(obs_matricies[i])
-            if rank < obs_matricies[i].shape[1]:
+            if np.linalg.det(obs_matricies[i].transpose() @ obs_matricies[i]) == 0:
                 return False
         return True
 
