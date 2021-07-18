@@ -8,7 +8,11 @@ class InputNormal(Transformation):
     def __init__(self):
         """__init__ Constructor for input normal state transformation
         """
-        super().__init__("input-normal", self._transform_causal, self._transform_anticausal)
+        super().__init__(
+            "input-normal",
+            self._transform_causal, 
+            self._transform_anticausal,
+            lambda s: (s.is_minimal(), "System is not minimal"))
     
     def _transform_causal(self, stages:List[Stage]) -> List[Stage]:
         """_transform_causal Transforms causal stages to input normal form
