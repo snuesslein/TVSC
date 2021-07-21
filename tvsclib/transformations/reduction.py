@@ -22,21 +22,23 @@ class Reduction(Transformation):
         k = len(stages)
         # Step 1: Reduction to a reachable system
         s_matricies = [np.zeros((0,0))] * (k+1)
+        r_matricies = [np.zeros((0,0))] * (k+1)
         result_reachable:List[Stage] = []
         for i in range(k):
             X_matrix = np.hstack([
-                stages[i].A_matrix @ s_matricies[i],
+                stages[i].A_matrix @ (r_matricies[i] @ s_matricies[i]),
                 stages[i].B_matrix
             ])
             u,s,_ = np.linalg.svd(X_matrix)
             s = s[0:sum(s > self.epsilon)]
             u = u[:,0:len(s)]
             S = np.diag(s)
-            s_matricies[i+1] = u @ S
-            s_inv = np.linalg.inv(S) @ u.transpose()
-            A_matrix = s_inv @ stages[i].A_matrix @ s_matricies[i]
-            B_matrix = s_inv @ stages[i].B_matrix
-            C_matrix = stages[i].C_matrix @ s_matricies[i]
+            s_matricies[i+1] = S
+            r_matricies[i+1] = u
+            r_inv = u.transpose()
+            A_matrix = r_inv @ stages[i].A_matrix @ r_matricies[i]
+            B_matrix = r_inv @ stages[i].B_matrix
+            C_matrix = stages[i].C_matrix @ r_matricies[i]
             result_reachable.append(Stage(
                 A_matrix.copy(),
                 B_matrix.copy(),
@@ -44,21 +46,23 @@ class Reduction(Transformation):
                 stages[i].D_matrix.copy()))
         # Step 2: Reduction to an observable system
         t_matricies = [np.zeros((0,0))] * (k+1)
+        r_matricies = [np.zeros((0,0))] * (k+1)
         result_observable:List[Stage] = []
         for i in range(k-1,-1,-1):
             X_matrix = np.vstack([
-                t_matricies[i+1] @ result_reachable[i].A_matrix,
+                (t_matricies[i+1] @ r_matricies[i+1]) @ result_reachable[i].A_matrix,
                 result_reachable[i].C_matrix
             ])
             _,s,vh = np.linalg.svd(X_matrix)
             s = s[0:sum(s > self.epsilon)]
             vh = vh[0:len(s),:]
             S = np.diag(s)
-            t_matricies[i] = S @ vh
-            t_inv = vh.transpose() @ np.linalg.inv(S)
-            A_matrix = t_matricies[i+1] @ result_reachable[i].A_matrix @ t_inv
-            B_matrix = t_matricies[i+1] @ result_reachable[i].B_matrix
-            C_matrix = result_reachable[i].C_matrix @ t_inv
+            t_matricies[i] = S
+            r_matricies[i] = vh
+            r_inv = vh.transpose()
+            A_matrix = r_matricies[i+1] @ result_reachable[i].A_matrix @ r_inv
+            B_matrix = r_matricies[i+1] @ result_reachable[i].B_matrix
+            C_matrix = result_reachable[i].C_matrix @ r_inv
             result_observable.append(Stage(
                 A_matrix.copy(),
                 B_matrix.copy(),
@@ -79,21 +83,23 @@ class Reduction(Transformation):
         k = len(stages)
         # Step 1: Reduction to a reachable system
         s_matricies = [np.zeros((0,0))] * (k+1)
+        r_matricies = [np.zeros((0,0))] * (k+1)
         result_reachable:List[Stage] = []
         for i in range(k-1,-1,-1):
             X_matrix = np.hstack([
-                stages[i].A_matrix @ s_matricies[i+1],
+                stages[i].A_matrix @ (r_matricies[i+1] @ s_matricies[i+1]),
                 stages[i].B_matrix
             ])
             u,s,_ = np.linalg.svd(X_matrix)
             s = s[0:sum(s > self.epsilon)]
             u = u[:,0:len(s)]
             S = np.diag(s)
-            s_matricies[i] = u @ S
-            s_inv = np.linalg.inv(S) @ u.transpose()
-            A_matrix = s_inv @ stages[i].A_matrix @ s_matricies[i+1]
-            B_matrix = s_inv @ stages[i].B_matrix
-            C_matrix = stages[i].C_matrix @ s_matricies[i+1]
+            s_matricies[i] = S
+            r_matricies[i] = u
+            r_inv = u.transpose()
+            A_matrix = r_inv @ stages[i].A_matrix @ r_matricies[i+1]
+            B_matrix = r_inv @ stages[i].B_matrix
+            C_matrix = stages[i].C_matrix @ r_matricies[i+1]
             result_reachable.append(Stage(
                 A_matrix.copy(),
                 B_matrix.copy(),
@@ -102,21 +108,23 @@ class Reduction(Transformation):
         result_reachable.reverse()
         # Step 2: Reduction to an observable system
         t_matricies = [np.zeros((0,0))] * (k+1)
+        r_matricies = [np.zeros((0,0))] * (k+1)
         result_observable:List[Stage] = []
         for i in range(k):
             X_matrix = np.vstack([
-                t_matricies[i] @ result_reachable[i].A_matrix,
+                (t_matricies[i] @ r_matricies[i]) @ result_reachable[i].A_matrix,
                 result_reachable[i].C_matrix
             ])
             _,s,vh = np.linalg.svd(X_matrix)
             s = s[0:sum(s > self.epsilon)]
             vh = vh[0:len(s),:]
             S = np.diag(s)
-            t_matricies[i+1] = S @ vh
-            t_inv = vh.transpose() @ np.linalg.inv(S)
-            A_matrix = t_matricies[i] @ result_reachable[i].A_matrix @ t_inv
-            B_matrix = t_matricies[i] @ result_reachable[i].B_matrix
-            C_matrix = result_reachable[i].C_matrix @ t_inv
+            t_matricies[i+1] = S
+            r_matricies[i+1] = vh
+            r_inv = vh.transpose()
+            A_matrix = r_matricies[i] @ result_reachable[i].A_matrix @ r_inv
+            B_matrix = r_matricies[i] @ result_reachable[i].B_matrix
+            C_matrix = result_reachable[i].C_matrix @ r_inv
             result_observable.append(Stage(
                 A_matrix.copy(),
                 B_matrix.copy(),
