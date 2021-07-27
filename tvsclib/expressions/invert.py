@@ -8,7 +8,7 @@ from tvsclib.expressions.mixed.invert import invert as invertMixed
 from tvsclib.expressions.const import Const
 
 class Invert(Expression):
-    def __init__(self, operand:Expression, name:str = "^-1", compile_to_const:bool = False):
+    def __init__(self, operand:Expression, name:str = "÷", compile_to_const:bool = False):
         """__init__ Constructor
 
         Args:
