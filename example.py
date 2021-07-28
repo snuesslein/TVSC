@@ -19,7 +19,7 @@ def build_graph(expression:Expression, f_out:Digraph):
     op_counter = 1
     for child in expression.childs:
         build_graph(child, f_out)
-        f_out.edge(str(id(expression)), str(id(child)), label=f"op:{op_counter}")
+        f_out.edge(str(id(child)), str(id(expression)), label=f"op:{op_counter}")
         op_counter = op_counter + 1
 
 # %% Set up a matricies

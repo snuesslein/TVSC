@@ -6,7 +6,7 @@ from tvsclib.stage import Stage
 from tvsclib.system_identification_interface import SystemIdentificationInterface
 
 class SystemIdentificationSVD(SystemIdentificationInterface):
-    def __init__(self, toeplitz: ToeplitzOperator, form:CanonicalForm = CanonicalForm.BALANCED, epsilon:float = 0, relative:bool = True):
+    def __init__(self, toeplitz: ToeplitzOperator, form:CanonicalForm = CanonicalForm.BALANCED, epsilon:float = 0, relative:bool = True, max_states_local:int = -1):
         """__init__ This class can be used to identify a state-space system from a toeplitz operator.
 
         Args:
@@ -14,11 +14,13 @@ class SystemIdentificationSVD(SystemIdentificationInterface):
             form (CanonicalForm, optional): Canonical System form which shall be produced. Defaults to CanonicalForm.BALANCED.
             epsilon (float, optional): Lower limit for singular values, can be used for approximation. Defaults to 0.
             relative (bool, optional): If true the epsilon value is realtive to sum of all singular values. Defaults to True.
+            max_states_local (int, optional): Can be used to set a maximal local state dimension. Defaults to -1 (means no limit).
         """
         self.toeplitz = toeplitz
         self.form = form
         self.epsilon = epsilon
         self.relative = relative
+        self.max_states_local = max_states_local
     
     def get_stages(self, causal:bool) -> Sequence[Stage]:
         """get_stages Get time varying system stages from teoplitz operator
@@ -100,6 +102,8 @@ class SystemIdentificationSVD(SystemIdentificationInterface):
                 rank_approx = rank_approx + 1
         else:
             rank_approx = sum(S > self.epsilon)
+        if self.max_states_local != -1:
+            rank_approx = min(self.max_states_local, rank_approx)
         # Retrieving observability and controlability matrix
         (Obs,Con) = {
             CanonicalForm.OUTPUT: lambda U,S,V,rank_approx: (
