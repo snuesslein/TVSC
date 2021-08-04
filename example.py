@@ -41,7 +41,7 @@ system_B = StrictSystem(system_identification=S, causal=True)
 
 T = ToeplitzOperator(matrix_C, dims_in, dims_out)
 S = SystemIdentificationSVD(T)
-system_C = MixedSystem(system_identification=S, causal_system=True)
+system_C = MixedSystem(system_identification=S)
 
 # %% Compute states and output vector
 x,y = system_A.compute(u)

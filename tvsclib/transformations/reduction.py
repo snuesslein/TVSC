@@ -12,10 +12,8 @@ class Reduction(Transformation):
     
     def _transform_causal(self, stages:List[Stage]) -> List[Stage]:
         """_transform_causal Transforms causal stages to reduced (fully reachable and observable) form
-
         Args:
             stages (List[Stage]): Causal stages
-
         Returns:
             List[Stage]: Transformed causal stages
         """
@@ -73,10 +71,8 @@ class Reduction(Transformation):
 
     def _transform_anticausal(self, stages:List[Stage]) -> List[Stage]:
         """_transform_anticausal Transforms anticausal stages to reduced form
-
         Args:
             stages (List[Stage]): Anticausal stages
-
         Returns:
             List[Stage]: Transformed anticausal stages
         """
