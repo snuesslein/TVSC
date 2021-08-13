@@ -1,6 +1,4 @@
 import numpy as np
-from numpy.core.numeric import full
-import scipy
 from typing import Tuple, Sequence
 from tvsclib.toeplitz_operator import ToeplitzOperator
 from tvsclib.canonical_form import CanonicalForm
@@ -10,7 +8,6 @@ from tvsclib.system_identification_interface import SystemIdentificationInterfac
 class SystemIdentificationSVD(SystemIdentificationInterface):
     def __init__(self, toeplitz: ToeplitzOperator, form:CanonicalForm = CanonicalForm.BALANCED, epsilon:float = 0, relative:bool = True, max_states_local:int = -1):
         """__init__ This class can be used to identify a state-space system from a toeplitz operator.
-
         Args:
             toeplitz (ToeplitzOperator): Toeplitz operator which shall be decomposed.
             form (CanonicalForm, optional): Canonical System form which shall be produced. Defaults to CanonicalForm.BALANCED.
@@ -26,10 +23,8 @@ class SystemIdentificationSVD(SystemIdentificationInterface):
     
     def get_stages(self, causal:bool) -> Sequence[Stage]:
         """get_stages Get time varying system stages from teoplitz operator
-
         Args:
             causal (bool): Determines if causal or anticausal system stages shall be returned
-
         Returns:
             Sequence[Stage]: Stages of the time varying system
         """
@@ -79,10 +74,8 @@ class SystemIdentificationSVD(SystemIdentificationInterface):
     
     def _factorize_hankel(self, hankel: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """_factorize_hankel Factorizes a hankel matrix into observability and controlability matrix
-
         Args:
             hankel (np.ndarray): Hankel matrix
-
         Returns:
             Tuple[np.ndarray, np.ndarray]: Tuple containing observability and controlability matrix
         """
@@ -125,10 +118,8 @@ class SystemIdentificationSVD(SystemIdentificationInterface):
     
     def _factorize_hankels(self, causal: bool) -> Tuple[Sequence[np.ndarray],Sequence[np.ndarray]]:
         """_factorize_hankels Factorizes the hankel matricies from toeplitz operator into observability and reachability matricies
-
         Args:
             causal (bool): Determines if causal or anticausal hankel matricies shall be factorized
-
         Returns:
             Tuple[Sequence[np.ndarray],Sequence[np.ndarray]]: Tuple containing lists of observability and reachability matricies
         """
