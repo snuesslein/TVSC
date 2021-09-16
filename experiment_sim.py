@@ -12,18 +12,14 @@ timestamp = datetime.today().strftime('%Y%m%d_%H%M%S%f')[:-3]
 
 process_lens = [ 
     200,
-    100,
-    50
+    100
 ]
 sample_sizes = [50, 100, 150, 200]
 epsilon_values = [
-#    0.1,
-    0.2,
-#    0.3,
-    0.4,
-#    0.5,
+    0.05,
+    0.1,
+    0.3,
     0.6,
-#    0.7
 ]
 
 processes = {
@@ -86,81 +82,92 @@ for draw_idx in range(no_draws * generate_data):
 
 # %% Visualize simulation experiment data
 df_statistics = load_statistics(f"sim-*", results_folder)
+
 # %%
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FormatStrFormatter
+from matplotlib.lines import Line2D
 import seaborn as sns
 
 n_values = df_statistics["n"].unique()
 p_values = df_statistics["p"].unique()
-proc_values = df_statistics["Process"].unique()
-
-pal = [
-    (0.7, 0.2, 0.1, 1.0), 
-    (0.0, 0.5, 0.0, 1.0),
-    (0.2, 0.1, 0.7, 1.0), 
-]
 
 for n in n_values: 
     for p in p_values:
-        for proc in proc_values:
-            df = df_statistics[
-                (df_statistics["n"] == n) &
-                (df_statistics["p"] == p) &
-                (df_statistics["Process"] == proc) ].copy()
-            df.loc[:,f"log$_{{10}}$(params)"] = np.log10(df["params"])
-            df.loc[:,f"log$_{{10}}$(mse)"] = np.log10(df["mse"])
-            df = df.groupby(["estimator", "\\epsilon"], dropna=False).mean()
-            df = df.reset_index()
-            df.loc[:,"$\\epsilon$"] = df["\\epsilon"]
-            df_ss =  df[df["estimator"].isin([
-                    "Ledoit Wolf + SS", 
-                    "Cholesky band + SS",
-                    "Sample + SS" 
-                    ])]
-            n_colors = len(df_ss["estimator"].unique())
-            df_mat =  df[df["estimator"].isin([
-                    "Ledoit Wolf", 
-                    "Cholesky band",
-                    "Sample", 
-                    ])]
-            df_mat.loc[:, "estimator"] = df_mat.apply(lambda row: 
-                row["estimator"] \
-                + (f" ($\\bar{{bw}}={df_mat['bw'].mean():.2f}$)" if row["estimator"] == "Cholesky band" else ""), 
-                axis=1)
-            fig = plt.figure()
-            gs0 = matplotlib.gridspec.GridSpec(2,1,figure=fig)
-            ax1 = fig.add_subplot(gs0[0,:])
-            ax2 = fig.add_subplot(gs0[1,:])
-            sns.lineplot(ax=ax1, data=df_ss, x="$\\epsilon$", y=f"log$_{{10}}$(mse)", 
-                hue="estimator", palette=pal[0:n_colors], legend=False)
-            pal_idx = 0
-            for estimator in df_mat["estimator"].unique():
-                y = df_mat[df_mat["estimator"] == estimator][f"log$_{{10}}$(mse)"].mean()
-                ax1.axhline(y, ls="--", c=pal[pal_idx])
-                pal_idx = pal_idx + 1
-                if pal_idx >= n_colors:
-                    break
-            sns.lineplot(ax=ax2, data=df_ss, x="$\\epsilon$", y=f"log$_{{10}}$(params)", 
-                hue="estimator", palette=pal[0:n_colors], legend=False)
-            pal_idx = 0
-            handles,labels = ax2.get_legend_handles_labels()
-            for estimator in df_mat["estimator"].unique():
-                y = df_mat[df_mat["estimator"] == estimator][f"log$_{{10}}$(params)"].mean()
-                ax2.axhline(y, ls="--", c=pal[pal_idx])
-                patch = matplotlib.patches.Patch(color=pal[pal_idx], label=estimator)
-                handles.append(patch)
-                pal_idx = pal_idx + 1
-                if pal_idx >= n_colors:
-                    break
-            line1 = matplotlib.lines.Line2D([0],[0], label="w.o. approx.", color="k", 
-                linestyle="--")
-            line2 = matplotlib.lines.Line2D([0],[0], label="w. approx.", color="k", 
-                linestyle="-")
-            handles.extend([line1, line2])
-            plt.legend(handles=handles,
-                loc='upper center', bbox_to_anchor=(0.5, -0.35),
-                fancybox=True, shadow=True, ncol=2)
-            plt.suptitle(f"{proc}, $p={p}$, $n={n}$")
-            plt.show()
+        df = df_statistics[
+            (df_statistics["n"] == n) &
+            (df_statistics["p"] == p) &
+            df_statistics["estimator"].isin([
+                "Cholesky band + SS",
+                "Ledoit Wolf + SS",
+                "Cholesky band",
+                "Sample + SS",
+                "Sample",
+                "Ledoit Wolf"
+            ]) ].copy()
+        
+        for proc in np.sort(df["Process"].unique()):
+            df_table = df[df["Process"] == proc]
+            df_table = df_table.groupby(["estimator", "\\epsilon"], dropna=False).median()
+            df_table = df_table[["mse", "params", "flops", "bw", f"\\bar{{d}}", "speedup", "savings"]]
+            print(df_table.head())
+            df_table.to_excel(f"{results_folder}/table-sim-{proc}-p{p}-n{n}.xlsx")
+            
+        df = df[~df["estimator"].isin(["Sample + SS", "Sample"])]
+        df.loc[:,"$\\epsilon$"] = df["\\epsilon"]
+        df.loc[:,f"log$_{{10}}$(mse)"] = np.log10(df["mse"])
+        df.loc[:,f"log$_{{10}}$(params)"] = np.log10(df["params"])
+        df.loc[:,f"log$_{{10}}$(flops)"] = np.log10(df["flops"])
+
+        fig,ax = plt.subplots(3,2, sharex=True, sharey=False)
+        col_idx = 0
+        for proc in np.sort(df["Process"].unique()):
+            df2 = df[df["Process"] == proc]
+            df3 = df2[~df2["estimator"].isin(["Ledoit Wolf", "Cholesky band"])]
+            df4 = df2[df2["estimator"].isin(["Ledoit Wolf", "Cholesky band"])]
+            ax[0,col_idx].set_title(proc)
+            sns.lineplot(data=df3, x="$\\epsilon$", y=f"log$_{{10}}$(params)", hue="estimator", ax=ax[0,col_idx])
+            ax[0,col_idx].axhline(df4[df4["estimator"] == "Cholesky band"][f"log$_{{10}}$(params)"].mean(), color='k', ls="--")
+            ax[0,col_idx].axhline(df4[df4["estimator"] == "Ledoit Wolf"][f"log$_{{10}}$(params)"].mean(), color='k', ls="-.")
+            sns.lineplot(data=df3, x="$\\epsilon$", y=f"log$_{{10}}$(flops)", hue="estimator", ax=ax[1,col_idx])
+            ax[1,col_idx].axhline(df4[df4["estimator"] == "Cholesky band"][f"log$_{{10}}$(flops)"].mean(), color='k', ls="--")
+            ax[1,col_idx].axhline(df4[df4["estimator"] == "Ledoit Wolf"][f"log$_{{10}}$(flops)"].mean(), color='k', ls="-.")
+            sns.lineplot(data=df3, x="$\\epsilon$", y="mse", hue="estimator", ax=ax[2,col_idx])
+            ax[2,col_idx].axhline(df4[df4["estimator"] == "Cholesky band"]["mse"].mean(), color='k', ls="--")
+            ax[2,col_idx].axhline(df4[df4["estimator"] == "Ledoit Wolf"]["mse"].mean(), color='k', ls="-.")
+            col_idx = col_idx + 1
+
+        h = []
+        l = []
+        for ax_el in ax.flatten():
+            ax_el.yaxis.set_major_formatter(FormatStrFormatter('%.3f'))
+            handles, labels = ax_el.get_legend_handles_labels()
+            h = [*h, *handles]
+            l = [*l, *labels]
+            ax_el.get_legend().remove()
+        _,ids = np.unique(l, return_index=True)
+        h = [h[i] for i in ids]
+        l = [l[i] for i in ids]  
+        plt.legend(h,l)
+
+        handles,_ = plt.gca().get_legend_handles_labels()
+        handles.extend([Line2D([0],[0],label="Ledoit Wolf", color="k", ls="-.")])
+        handles.extend([Line2D([0],[0],label="Cholesky band", color="k", ls="--")])
+        plt.legend(handles=handles, loc='upper center', bbox_to_anchor=(-0.35, -0.6), ncol=2)
+        plt.suptitle(f"$n={n}$, $p={p}$", y=1.0)
+        plt.subplots_adjust(wspace=0.6, hspace = 0.5)
+        plt.show()
+            
+# %%
+_,C_ma = processes["MA(4)"](10,200)
+_,C_tvarma = processes["tvARMA(2,2)"](10,200)
+
+# using tuple unpacking for multiple Axes
+fig, (ax1, ax2) = plt.subplots(1, 2)
+ax1.imshow(C_tvarma, cmap='hot', interpolation='nearest')
+ax1.title.set_text("tvARMA(2,2)")
+ax2.imshow(C_ma, cmap='hot', interpolation='nearest')
+ax2.title.set_text("MA(4)")
+plt.show()
 # %%

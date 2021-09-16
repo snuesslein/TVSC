@@ -14,7 +14,9 @@ def load_statistics(prefix:str, results_folder:str):
     for file in glob.glob(f"{results_folder}/{prefix}_*.pkl"):
         df = pd.read_pickle(file)
         dataframes.append(df)
-    return pd.concat(dataframes,ignore_index=True)
+    if len(dataframes) > 0:
+        return pd.concat(dataframes,ignore_index=True)
+    return None
 
 def load_UCR2018(base_dir, dataset_name):
     datasets = {}

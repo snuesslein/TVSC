@@ -124,22 +124,36 @@ def make_sample_cov(X:np.ndarray):
     p = X.shape[1]
     params = p*(p+1)/2 # Assuming positive definitness
     sample_cov = X_zero_mean.transpose() @ X_zero_mean
+    flops = p**2
     return sample_cov, {
+        "flops": flops,
+        "speedup": 1.0,
         "params": params,
+        "savings": 1.0,
         "estimator": "Sample" }
 
 def make_sample_diag_cov(X:np.ndarray):
     X_zero_mean = X - X.mean(axis=0)
     sample_cov = X_zero_mean.transpose() @ X_zero_mean
     diag_cov = np.diag(np.diag(sample_cov))
-    params = diag_cov.shape[0]
+    p = diag_cov.shape[0]
+    params = p
+    savings = p*(p+1)/2 / params
+    flops = p
+    speedup = p**2 / flops
     return diag_cov, {
         "params": params,
+        "savings": savings,
+        "flops": flops,
+        "speedup": speedup,
         "estimator": "Sample diag." }
 
 def make_identity_cov(X:np.ndarray):
     return np.identity(X.shape[1]), {
         "params": 0,
+        "savings": float("inf"),
+        "flops": 0,
+        "speedup": float("inf"),
         "estimator": "Identity"
     }
 
@@ -147,8 +161,14 @@ def make_sample_band_cov(X:np.ndarray):
     p = X.shape[1]
     sample_band_cov, bw = band_sample_cv(X,verbose=True, k_max=int(np.ceil(np.sqrt(p))))
     params = p*(p+1)/2 - (p-bw-1)*(p-bw)/2
+    savings = p*(p+1)/2 / params
+    flops = (bw+1)**2 + (p-bw-1)*(2*bw+1)
+    speedup = p**2 / flops
     return sample_band_cov, {
         "params": params,
+        "savings": savings,
+        "flops": flops,
+        "speedup": speedup,
         "estimator": "Sample band", 
         "bw": bw }
 
@@ -156,8 +176,14 @@ def make_chol_band_cov(X:np.ndarray):
     p = X.shape[1]
     chol_band_cov, bw = band_chol_cv(X, verbose=True, k_max=int(np.ceil(np.sqrt(p))))
     params = p*(p+1)/2 - (p-bw-1)*(p-bw)/2
+    savings = p*(p+1)/2 / params
+    flops = (bw+1)**2 + (p-bw-1)*(2*bw+1)
+    speedup = p**2 / flops
     return chol_band_cov, {
         "params": params,
+        "savings": savings,
+        "flops": flops,
+        "speedup": speedup,
         "estimator": "Cholesky band", 
         "bw": bw }
 
@@ -165,12 +191,17 @@ def make_lw_cov(X:np.ndarray):
     lw_cov = LedoitWolf().fit(X).covariance_
     p = X.shape[1]
     params = p*(p+1)/2
+    flops = p**2
     return lw_cov, {
         "params": params,
+        "speedup": 1.0,
+        "flops": flops,
+        "savings": 1.0,
         "estimator": "Ledoit Wolf" }
 
 def make_ss_approx(make_cov, X:np.ndarray, epsilon:float, as_matrix:bool=False):
     C_est, C_info = make_cov(X)
+    p = C_est.shape[1]
     input_dims = [1]*C_est.shape[0]
     output_dims = [1]*C_est.shape[0]
     try:
@@ -182,22 +213,33 @@ def make_ss_approx(make_cov, X:np.ndarray, epsilon:float, as_matrix:bool=False):
     Sid = SystemIdentificationSVD(T, epsilon=epsilon)
     Sys = StrictSystem(causal=True, system_identification=Sid)
 
-    d = Sys.dims_state
+    d = np.array(Sys.dims_state)
     d_mean = np.mean(d)
     print(f"d_mean: {d_mean}")
-    d_dict = dict(zip(
-        [f"d({idx})" for idx in range(1, len(d)+1)],
-        d
-    ))
-    params = np.sum(np.array(Sys.dims_state)**2) \
-        + np.sum(2*np.array(Sys.dims_state)) + len(Sys.stages)
+
+    flops = 2*np.sum(d**2) + 3*np.sum(d) + 1
+    print(f"flops: {flops}")
+
+    speedup = (p**2) / flops
+    print(f"speedup: {speedup}")
+
+    params = np.sum(d**2) + 2*np.sum(d) + len(d)
+    print(f"params: {params}")
+
+    savings = p*(p+1)/2 / params
+    print(f"savings: {savings}")
+
     info = { 
         **C_info,
         "estimator": C_info["estimator"] + " + SS",
         "params": params,
+        "savings": savings,
+        "flops": flops,
+        "speedup": speedup,
         "\\epsilon": epsilon, 
         f"\\bar{{d}}": d_mean, 
-        **d_dict }
+        #**d_dict 
+        }
 
     if as_matrix:
         mat_rec = Sys.to_matrix()

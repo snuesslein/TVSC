@@ -17,7 +17,13 @@ dataset_names = [
     "Strawberry",
 ]
 
-epsilon_values = [0.1, 0.3, 0.5, 0.7]
+epsilon_values = [
+    0.05, 
+    0.1, 
+    0.15,
+    0.3, 
+    0.6
+]
 
 classifiers = [
     MatrixClassifier("Euclidean", make_identity_cov),
@@ -128,9 +134,15 @@ for dataset_name in (dataset_names if generate_data else []):
         real_results = []
 
 # %% Visualize / Analyze real experiment data
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 for split in ["kfold", "orig"]:
     df_statistics = load_statistics(f"real_{split}-*", results_folder)
+
+    if df_statistics is None:
+        continue
+
     datasets = df_statistics["dataset"].unique()
 
     for dataset in datasets:
@@ -138,9 +150,8 @@ for split in ["kfold", "orig"]:
         df = df_statistics[df_statistics["dataset"] == dataset].copy()
         n = int(df[f"n_\\mathrm{{train}}"].mean())
         p = int(df["p"].mean())
-        df.loc[:, f"\\frac{{\\bar{{d}}^2}}{{\\mathrm{{bw}}}}"] = \
-            np.array(df[f"\\bar{{d}}"])**2 / df["bw"]
         df = df.groupby(["estimator", "\\epsilon"], dropna=False).mean()
-        df = df[["acc", "precision", "recall", "params", "bw", f"\\bar{{d}}", f"\\frac{{\\bar{{d}}^2}}{{\\mathrm{{bw}}}}"]]
+        df = df[["acc", "precision", "recall", "params", "flops", "bw", f"\\bar{{d}}", "speedup", "savings"]]
         print(df.head())
-        df.to_excel(f"{results_folder}/table-{split}-{dataset}-p{p}-n{n}.xlsx")
+        df.to_excel(f"{results_folder}/table-real-{split}-{dataset}-p{p}-n{n}.xlsx")
+# %%
