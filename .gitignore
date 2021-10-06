@@ -1,6 +1,6 @@
 # Local files
-.local
 .vscode
+datasets/
 results/
 
 # Byte-compiled / optimized / DLL files
