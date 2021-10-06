@@ -10,8 +10,6 @@ matrix = np.random.rand(sum(dims_out), sum(dims_in))
 T = ToeplitzOperator(matrix, dims_in, dims_out)
 S = SystemIdentificationSVD(T)
 
-u = np.random.rand(sum(dims_in),1)
-
 system = MixedSystem(S)
 system_causal = system.causal_system
 system_anticausal = system.anticausal_system
