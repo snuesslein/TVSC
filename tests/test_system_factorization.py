@@ -4,9 +4,11 @@ from tvsclib.toeplitz_operator import ToeplitzOperator
 from tvsclib.system_identification_svd import SystemIdentificationSVD
 
 def testSystemFactorization():
-    dims_in =  [2, 1, 2, 1]
-    dims_out = [1, 2, 3, 2]
+    dims_in =  [2]*8
+    dims_out = [2]*8
     matrix = np.random.rand(sum(dims_out), sum(dims_in))
+    matrix = matrix - np.tril(matrix,-2) - np.triu(matrix,2) # Banded shape
+    matrix = np.linalg.inv(matrix)                           # Obscure structure  
     T = ToeplitzOperator(matrix, dims_in, dims_out)
     S = SystemIdentificationSVD(T)
 
@@ -23,4 +25,15 @@ def testSystemFactorization():
     assert np.allclose(v.transpose().to_matrix() @ v.to_matrix(), np.eye(sum(v.dims_in))), "v is not unitary"
     assert np.allclose(V.transpose().to_matrix() @ V.to_matrix(), np.eye(sum(V.dims_in))), "V is not unitary"
     assert np.allclose(R.arrow_reversal().to_matrix() @ R.to_matrix(), np.eye(sum(R.dims_in))), "R inverse is wrong"
+
+    Vl,To = system_causal.inner_outer_factorization()
+    assert np.allclose(Vl.to_matrix() @ To.to_matrix(), system_causal.to_matrix()), "Inner outer factorization is wrong"
+    assert np.allclose(Vl.transpose().to_matrix() @ Vl.to_matrix(), np.eye(sum(Vl.dims_in))), "Vl is not unitary"
+    assert np.allclose(To.to_matrix() @ To.arrow_reversal().to_matrix(), np.eye(sum(To.dims_in))), "To inverse is wrong"
+
+    To,Vr = system_causal.outer_inner_factorization()
+    assert np.allclose(To.to_matrix() @ Vr.to_matrix(), system_causal.to_matrix()), "Outer inner factorization is wrong"
+    assert np.allclose(Vr.to_matrix() @ Vr.transpose().to_matrix(), np.eye(sum(Vr.dims_out))), "Vr is not unitary"
+    assert np.allclose(To.arrow_reversal().to_matrix() @ To.to_matrix(), np.eye(sum(To.dims_out))), "To inverse is wrong"
+
 
