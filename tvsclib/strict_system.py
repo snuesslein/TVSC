@@ -27,7 +27,7 @@ class StrictSystem(SystemInterface):
             self.stages = stages
         else:
             raise AttributeError("Not enough arguments provided")
-    
+
     def copy(self) -> StrictSystem:
         """copy Returns a copy of this system
 
@@ -35,7 +35,7 @@ class StrictSystem(SystemInterface):
             StrictSystem: Copy of this system
         """
         return StrictSystem(causal=self.causal, stages=deepcopy(self.stages))
-    
+
     @property
     def dims_in(self) -> List[int]:
         """dims_in Input dimensions for each time step
@@ -80,35 +80,83 @@ class StrictSystem(SystemInterface):
         if self.causal:
             return self._compute_causal(input, start_index, time_steps, initial_state)
         return self._compute_anticausal(input, start_index, time_steps, initial_state)
-    
-    def to_matrix(self) -> np.ndarray:
+
+    def to_matrix(self,use_formula = False) -> np.ndarray:
         """to_matrix Create a matrix representation of the strict system.
+
+        Args:
+            use_formula (bool, optional): If set to True uses the formual T = D + C@(I − Z@A)**−1@Z@B,
+                if set to False the Transfer function is calcualted block-wise.
+                This is usefull if the inverse should not be calcualted
+
 
         Returns:
             np.ndarray: Matrix representation
         """
-        block_A = block_diag(*[el.A_matrix for el in self.stages])
-        block_B = block_diag(*[el.B_matrix for el in self.stages])
-        block_C = block_diag(*[el.C_matrix for el in self.stages])
-        block_D = block_diag(*[el.D_matrix for el in self.stages])
 
-        projection_1 = np.vstack([
-            np.eye(block_A.shape[0]),
-            np.zeros((1,block_A.shape[0]))
-        ])
-        projection_2 = np.hstack([
-            np.zeros((block_A.shape[1],1)),
-            np.eye(block_A.shape[1])
-        ])
+        if use_formula:
+            A = block_diag(*[el.A_matrix for el in self.stages])
+            B = block_diag(*[el.B_matrix for el in self.stages])
+            C = block_diag(*[el.C_matrix for el in self.stages])
+            D = block_diag(*[el.D_matrix for el in self.stages])
 
-        A = projection_1@block_A@projection_2
-        B = projection_1@block_B
-        C = block_C@projection_2
-        D = block_D
-        Z = np.diag(*np.ones((1,A.shape[0]-1)),-1)
+            #Shift operator Z is Identity, so we can ignore it
 
-        return D + C@np.linalg.pinv(np.eye(A.shape[0]) - Z@A)@Z@B
-    
+            return D + C@np.linalg.pinv(np.eye(A.shape[0]) - A)@B
+        else:
+            #Generate the T matrix
+            T = np.zeros((np.sum(self.dims_out),np.sum(self.dims_in)))
+            #Now we set the block elements in T
+            if self.causal:
+                i_cl = 0 #we have to index a lot of ranges. these are the lower limits
+                i_rl = 0
+                #loop over collumns
+                for k in range(len(self.stages)):
+                    i_cu = i_cl+self.dims_in[k] #set the limits
+                    i_rl = sum(self.dims_out[:k])
+                    i_ru = i_rl+self.dims_out[k]
+                    #set the Diagonal
+                    T[i_rl:i_ru,i_cl:i_cu] = self.stages[k].D_matrix
+                    if k+1 < len(self.stages):
+                        #now do the case CB
+                        i_rl = i_ru
+                        i_ru = i_rl + self.dims_out[k+1]
+                        T[i_rl:i_ru,i_cl:i_cu] = self.stages[k+1].C_matrix@self.stages[k].B_matrix
+                        V = self.stages[k].B_matrix.copy() #Accumulation matrix
+                        for l in range(k+2,len(self.stages)):
+                            #insert the elements C_l A_l-1 ... A_k+1 B_k
+                            V = self.stages[l-1].A_matrix@V
+                            i_rl = i_ru
+                            i_ru = i_rl + self.dims_out[l]
+                            T[i_rl:i_ru,i_cl:i_cu]= self.stages[l].C_matrix@V
+                    i_cl=i_cu #for next collumn
+            else: #for anticausal case
+                i_cl = 0 #we have to index a lot of ranges. these are the lower limits
+                i_rl = 0
+                #loop over rows
+                for k in range(len(self.stages)):
+                    i_ru = i_rl+self.dims_out[k] #set the limits
+                    i_cl = sum(self.dims_in[:k])
+                    i_cu = i_cl+self.dims_in[k]
+                    #set the Diagonal
+                    T[i_rl:i_ru,i_cl:i_cu] = self.stages[k].D_matrix
+                    if k+1 < len(self.stages):
+                        #now do the case CB
+                        i_cl = i_cu
+                        i_cu = i_cl + self.dims_in[k+1]
+                        T[i_rl:i_ru,i_cl:i_cu] = self.stages[k].C_matrix@self.stages[k+1].B_matrix
+                        V = self.stages[k].C_matrix.copy() #Accumulation matrix
+                        for l in range(k+2,len(self.stages)):
+                            #insert the elements C_l A_l+1 ... A_k-1 B_k
+                            V = V@self.stages[l-1].A_matrix
+                            i_cl = i_cu
+                            i_cu = i_cl + self.dims_in[l]
+                            T[i_rl:i_ru,i_cl:i_cu]= V@self.stages[l].B_matrix
+                    i_rl=i_ru #for next row
+
+            return T
+
+
     def _compute_causal(
         self, input:np.ndarray, start_index:int=0,
         time_steps:int=-1, initial_state:np.ndarray=np.zeros((0,1))) -> Tuple[np.ndarray, np.ndarray]:
@@ -137,7 +185,7 @@ class StrictSystem(SystemInterface):
         return (
             np.vstack(x_vectors[1:]),
             np.vstack(y_vectors))
-    
+
     def _compute_anticausal(
         self, input:np.ndarray, start_index:int=0,
         time_steps:int=-1, initial_state:np.ndarray=np.zeros((0,1))) -> Tuple[np.ndarray, np.ndarray]:
@@ -167,7 +215,7 @@ class StrictSystem(SystemInterface):
         return (
             np.vstack(x_vectors[0:k]),
             np.vstack(y_vectors))
-    
+
     def is_reachable(self) -> bool:
         """is_reachable Check if all internal states can be reached
 
@@ -179,7 +227,7 @@ class StrictSystem(SystemInterface):
             if np.linalg.det(reach_matricies[i] @ reach_matricies[i].transpose()) == 0:
                 return False
         return True
-    
+
     def is_observable(self) -> bool:
         """is_observable Check if internal states can be infered from output
 
@@ -231,7 +279,7 @@ class StrictSystem(SystemInterface):
                 obs_matrix_parts.append(o)
             all_obs_matricies.append(np.vstack(obs_matrix_parts))
         return all_obs_matricies
-    
+
     def _reachability_matricies_causal(self) -> List[np.ndarray]:
         """_reachability_matricies_causal Returns list of reachability matricies.
         See TVSC Lecture slides Unit 5.5 page 2.
@@ -250,7 +298,7 @@ class StrictSystem(SystemInterface):
             reach_matrix_parts.reverse()
             all_reach_matricies.append(np.hstack(reach_matrix_parts))
         return all_reach_matricies
-    
+
     def _observability_matricies_anticausal(self) -> List[np.ndarray]:
         """_observability_matricies_anticausal Returns list of observability matricies.
         See TVSC Lecture slides Unit 5.5 page 2.
@@ -269,7 +317,7 @@ class StrictSystem(SystemInterface):
             all_obs_matricies.append(np.vstack(obs_matrix_parts))
         all_obs_matricies.reverse()
         return all_obs_matricies
-    
+
     def _reachability_matricies_anticausal(self) -> List[np.ndarray]:
         """_reachability_matricies_anticausal Returns list of reachability matricies.
         See TVSC Lecture slides Unit 5.5 page 2.
@@ -289,12 +337,12 @@ class StrictSystem(SystemInterface):
             all_reach_matricies.append(np.hstack(reach_matrix_parts))
         all_reach_matricies.reverse()
         return all_reach_matricies
-    
+
     def transpose(self) -> StrictSystem:
         """transpose Transposed system
 
         Returns:
-            StrictSystem: Transposition result 
+            StrictSystem: Transposition result
         """
         k = len(self.stages)
         stages = []
@@ -318,7 +366,7 @@ class StrictSystem(SystemInterface):
             return StrictSystem._rq_forward(self)
         V,To = StrictSystem._ql_backward(self.transpose())
         return (To.transpose(), V.transpose())
-    
+
     def inner_outer_factorization(self) -> Tuple[StrictSystem, StrictSystem]:
         """inner_outer_factorization Produces an inner outer factorization of the system.
         Inner factor is unitary, outer factor is causaly invertible.
@@ -395,7 +443,7 @@ class StrictSystem(SystemInterface):
                 range(R_matrix.shape[0]-1,-1,-1),:]
             R_matrix = R_matrix[
                 :,range(R_matrix.shape[1]-1,-1,-1)]
-                
+
             no_rows_Y = R_matrix.shape[0] - system.stages[i].D_matrix.shape[0]
             no_cols_Y = R_matrix.shape[1] - system.stages[i].D_matrix.shape[0]
             no_cols_Y = max(0, no_cols_Y)
@@ -416,7 +464,7 @@ class StrictSystem(SystemInterface):
             Aq_matrix = Q_matrix[
                 0:Q_matrix.shape[0]-Dr_matrix.shape[1],:][
                     :,0:Q_matrix.shape[1]-system.stages[i].D_matrix.shape[1]]
-            
+
             stages_r.append(Stage(
                 system.stages[i].A_matrix,
                 Br_matrix,
@@ -465,7 +513,7 @@ class StrictSystem(SystemInterface):
                 range(L_matrix.shape[0]-1,-1,-1),:]
             L_matrix = L_matrix[
                 :,range(L_matrix.shape[1]-1,-1,-1)]
-            
+
             no_rows_Y = L_matrix.shape[0] - system.stages[i].D_matrix.shape[1]
             no_rows_Y = max(0, no_rows_Y)
             no_cols_Y = system.stages[i].A_matrix.shape[1]
@@ -487,7 +535,7 @@ class StrictSystem(SystemInterface):
             Aq_matrix = Q_matrix[
                 0:Q_matrix.shape[0]-system.stages[i].D_matrix.shape[0],:][
                     :,0:Q_matrix.shape[1]-Dl_matrix.shape[0]]
-            
+
             stages_l.append(Stage(
                 system.stages[i].A_matrix,
                 system.stages[i].B_matrix,
