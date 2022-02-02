@@ -216,28 +216,36 @@ class StrictSystem(SystemInterface):
             np.vstack(x_vectors[0:k]),
             np.vstack(y_vectors))
 
-    def is_reachable(self) -> bool:
+    def is_reachable(self,tolerance:float = 1e-7) -> bool:
         """is_reachable Check if all internal states can be reached
+
+        Args:
+            tolerance: (float, optional): epsilon for rank calculation. Default is 1e-7=sqrt(1e-14).
 
         Returns:
             bool: True if system is fully reachable, false otherwise
         """
         reach_matricies = self.reachability_matricies()
         for i in range(len(reach_matricies)):
-            if np.linalg.det(reach_matricies[i] @ reach_matricies[i].transpose()) == 0:
-                return False
+            if min(reach_matricies[i].shape)!=0:
+                if np.linalg.matrix_rank(reach_matricies[i],tol=tolerance)<min(reach_matricies[i].shape):
+                    return False
         return True
 
-    def is_observable(self) -> bool:
+    def is_observable(self,tolerance:float = 1e-7) -> bool:
         """is_observable Check if internal states can be infered from output
+
+        Args:
+            tolerance: (float, optional): epsilon for rank calculation. Default is 1e-7=sqrt(1e-14).
 
         Returns:
             bool: True if system is fully observable, false otherwise
         """
         obs_matricies = self.observability_matricies()
         for i in range(len(obs_matricies)):
-            if np.linalg.det(obs_matricies[i].transpose() @ obs_matricies[i]) == 0:
-                return False
+            if min(obs_matricies[i].shape)!=0:
+                if np.linalg.matrix_rank(obs_matricies[i],tol=tolerance)<min(obs_matricies[i].shape):
+                    return False
         return True
 
     def reachability_matricies(self) -> List[np.ndarray]:
