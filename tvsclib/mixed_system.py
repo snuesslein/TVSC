@@ -19,7 +19,15 @@ class MixedSystem(SystemInterface):
             self.anticausal_system = anticausal_system
         else:
             raise AttributeError("Not enough arguments provided")
-    
+
+    def __str__(self) -> String:
+        """creates a String representation
+
+        """
+        return "Mixed system with the parts \n"\
+                + str(self.causal_system)+ "\n"\
+                + str(self.anticausal_system)
+
     @property
     def dims_in(self) -> List[int]:
         """dims_in Input dimensions for each time step

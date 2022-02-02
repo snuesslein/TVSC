@@ -28,6 +28,35 @@ class StrictSystem(SystemInterface):
         else:
             raise AttributeError("Not enough arguments provided")
 
+    def __str__(self) -> String:
+        """creates a String representation
+
+        """
+
+        if self.causal:
+            description  = "Causal System:\n"
+        else:
+            description  = "Anticausal System:\n"
+
+        description += "    State dimensions: "+str(self.dims_state)+"\n"
+        description += "    Input dimensions: "+str(self.dims_in)+"\n"
+        description += "    Output dimensions:"+str(self.dims_out)+"\n"
+
+        reachable = self.is_reachable()
+        observable = self.is_observable()
+
+        if observable and reachable:
+            description += "    System is minimal"
+        else:
+            if observable:
+                description += "    System is observable"
+            if reachable:
+                description += "    System is reachable"
+        if not observable and not reachable:
+            description += "    System is neither reachable nor observable"
+        return description
+
+
     def copy(self) -> StrictSystem:
         """copy Returns a copy of this system
 
