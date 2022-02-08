@@ -329,6 +329,79 @@ class StrictSystem(SystemInterface):
             return self._observability_matricies_causal()
         return self._observability_matricies_anticausal()
 
+    def reachability_matrix(self,k:int) -> np.ndarray:
+        """reachability_matricx Returns reachability matrix for index k.
+        This represents the mapping from the relevant inputs to the state x_k
+        In the causal case this is [...,A_{k-1}B_{k-2},B_{k-1}]
+
+        In the anticausal case this is [B_{k+1},A{k+1}B_{k+2},....]
+
+        See also TVSC Lecture slides Unit 5.5 page 2.
+
+        Args:
+            k: (int): Index
+        Returns:
+            np.ndarray: Reachability matrix for timestep k
+
+        TODO: it is unclear how to deal with systems that have nonzero final state dims
+        """
+        if self.causal:
+            mats = [self.stages[k-1].B_matrix]
+            As = self.stages[k-1].A_matrix
+            for l in range(k-2,-1,-1):
+                mats.append(As@self.stages[l].B_matrix)
+                As = As@self.stages[l].A_matrix
+            mats.reverse()
+            return(np.hstack(mats))
+        else:
+            mats = [self.stages[k+1].B_matrix]
+            As = self.stages[k+1].A_matrix
+            for l in range(k+2,len(self.stages),1):
+                mats.append(As@self.stages[l].B_matrix)
+                As = As@self.stages[l].A_matrix
+            return(np.hstack(mats))
+
+
+    def observability_matrix(self,k:int) -> np.ndarray:
+        """observability_matricx Returns observability matrix for index k.
+        This represents the mapping from the state x_i to the relevant outputs
+        In the causal case this is:
+            [C_k,
+            C_{k+1}A_k,
+            ...]
+
+        In the anticausal case this is
+            [...,
+            C_{k-1}A_k,
+            C_k]
+
+        See also TVSC Lecture slides Unit 5.5 page 2.
+
+        Args:
+            i: (int): Index
+        Returns:
+            np.ndarray: Reachability matrix for timestep k
+
+        TODO: it is unclear how to deal with systems that have nonzero final state dims
+        """
+        if self.causal:
+            mats = [self.stages[k].C_matrix]
+            As = self.stages[k].A_matrix
+            for l in range(k+1,len(self.stages),1):
+                mats.append(self.stages[l].C_matrix@As)
+                As = self.stages[l].A_matrix@As
+            return(np.vstack(mats))
+        else:
+            mats = [self.stages[k].C_matrix]
+            As = self.stages[k].A_matrix
+            for l in range(k-1,-1,-1):
+                mats.append(self.stages[l].C_matrix@As)
+                As = self.stages[l].A_matrix@As
+            mats.reverse()
+            return(np.vstack(mats))
+
+
+
     def _observability_matricies_causal(self) -> List[np.ndarray]:
         """_observability_matricies_causal Returns list of observability matricies.
         See TVSC Lecture slides Unit 5.5 page 2.
