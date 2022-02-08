@@ -277,6 +277,39 @@ class StrictSystem(SystemInterface):
                     return False
         return True
 
+    def is_input_normal(self) -> bool:
+        """is_input_nomral Check if the realization is input normal
+            Checks if the rows in the reachability matries are orthogonal
+
+        Args:
+            tolerance
+
+        Returns:
+            bool: True if system is input normal
+        """
+        for i in range(len(self.stages)):
+            if not np.allclose(self.stages[i].A_matrix@self.stages[i].A_matrix.T+
+                self.stages[i].B_matrix@self.stages[i].B_matrix.T,np.eye(self.stages[i].A_matrix.shape[0])):
+                return False
+        return True
+
+
+    def is_output_normal(self) -> bool:
+        """is_output_nomral Check if the realization is output normal
+            Checks if the collumns in the observability matries are orthogonal
+
+        Args:
+            tolerance
+
+        Returns:
+            bool: True if system is output normal
+        """
+        for i in range(len(self.stages)):
+            if not np.allclose(self.stages[i].A_matrix.T@self.stages[i].A_matrix+
+                self.stages[i].C_matrix.T@self.stages[i].C_matrix,np.eye(self.stages[i].A_matrix.shape[1])):
+                return False
+        return True
+
     def is_balanced(self,tolerance:float = 1e-15) -> bool:
         """is_canonical Check if the implemention is BALANCED
 
