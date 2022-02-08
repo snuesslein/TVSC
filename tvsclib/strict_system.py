@@ -277,6 +277,36 @@ class StrictSystem(SystemInterface):
                     return False
         return True
 
+    def is_balanced(self,tolerance:float = 1e-15) -> bool:
+        """is_canonical Check if the implemention is BALANCED
+
+        Args:
+            tolerance
+
+        Returns:
+            bool: True if system is balanced
+        """
+        obs_matricies = self.observability_matricies()
+        reach_matricies = self.reachability_matricies()
+        for i in range(len(obs_matricies)):
+            obs_gramian = obs_matricies[i].T@obs_matricies[i]
+            reach_gramian =reach_matricies[i]@reach_matricies[i].T
+            d_obs = np.diag(obs_gramian).copy()
+            d_reach = np.diag(reach_gramian).copy()
+
+            #check if the vectors are orthogonal
+            np.fill_diagonal(obs_gramian,0)
+            np.fill_diagonal(reach_gramian,0)
+            obs_orth = np.all(np.abs(obs_gramian) <tolerance)
+            reach_orth = np.all(np.abs(reach_gramian) <tolerance)
+
+            if not (obs_orth and reach_orth and np.allclose(d_reach,d_obs)):
+                return False
+            #check if the singular values are in decreasing oder
+            #here we have a small margin for round-off error
+            #ordered = balanced and np.all(d_reach[1:]-d_reach[:-1]<1e-16)
+        return True
+
     def reachability_matricies(self) -> List[np.ndarray]:
         """reachability_matricies Returns list of reachability matricies.
         See TVSC Lecture slides Unit 5.5 page 2.
