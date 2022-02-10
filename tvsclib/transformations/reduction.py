@@ -27,14 +27,12 @@ class Reduction(Transformation):
         # Step 1: Reduction to a reachable system
         for i in range(k-1):
             U,s,Vt= np.linalg.svd(np.hstack([stages[i].A_matrix,stages[i].B_matrix]))
-            n = np.count_nonzero(s>self.epsilon)
+            n = np.count_nonzero(s>1e-15) #here only reduce the extremly small sigmas
 
-            rs = np.sqrt(s[:n])
-            Us=U[:,:n]*rs
-            sVt=rs.reshape(-1,1)*Vt[:n,:]
+            Us=U[:,:n]*s[:n]
 
-            stages[i].A_matrix=sVt[:,:stages[i].A_matrix.shape[1]]
-            stages[i].B_matrix=sVt[:,stages[i].A_matrix.shape[1]:]
+            stages[i].A_matrix=Vt[:n,:stages[i].A_matrix.shape[1]]
+            stages[i].B_matrix=Vt[:n,stages[i].A_matrix.shape[1]:]
             stages[i+1].A_matrix = stages[i+1].A_matrix@Us
             stages[i+1].C_matrix = stages[i+1].C_matrix@Us
 
@@ -43,12 +41,10 @@ class Reduction(Transformation):
             U,s,Vt= np.linalg.svd(np.vstack([stages[i].C_matrix,stages[i].A_matrix]))
             n = np.count_nonzero(s>self.epsilon)
 
-            rs = np.sqrt(s[:n])
-            Us=U[:,:n]*rs
-            sVt=rs.reshape(-1,1)*Vt[:n,:]
+            sVt=s[:n].reshape(-1,1)*Vt[:n,:]
 
-            stages[i].C_matrix=Us[:stages[i].C_matrix.shape[0],:]
-            stages[i].A_matrix=Us[stages[i].C_matrix.shape[0]:,:]
+            stages[i].C_matrix=U[:stages[i].C_matrix.shape[0],:n]
+            stages[i].A_matrix=U[stages[i].C_matrix.shape[0]:,:n]
             stages[i-1].A_matrix=sVt@stages[i-1].A_matrix
             stages[i-1].B_matrix=sVt@stages[i-1].B_matrix
         return stages
@@ -69,14 +65,12 @@ class Reduction(Transformation):
         # Step 1: Reduction to an observable system
         for i in range(k-1):
             U,s,Vt= np.linalg.svd(np.vstack([stages[i].C_matrix,stages[i].A_matrix]))
-            n = np.count_nonzero(s>self.epsilon)
+            n = np.count_nonzero(s>1e-15) #here only reduce the extremly small sigmas
 
-            rs = np.sqrt(s[:n])
-            Us=U[:,:n]*rs
-            sVt=rs.reshape(-1,1)*Vt[:n,:]
+            sVt=s[:n].reshape(-1,1)*Vt[:n,:]
 
-            stages[i].C_matrix=Us[:stages[i].C_matrix.shape[0],:]
-            stages[i].A_matrix=Us[stages[i].C_matrix.shape[0]:,:]
+            stages[i].C_matrix=U[:stages[i].C_matrix.shape[0],:n]
+            stages[i].A_matrix=U[stages[i].C_matrix.shape[0]:,:n]
             stages[i+1].A_matrix=sVt@stages[i+1].A_matrix
             stages[i+1].B_matrix=sVt@stages[i+1].B_matrix
         # Step 2: Reduction to a reachable system
@@ -84,12 +78,10 @@ class Reduction(Transformation):
             U,s,Vt= np.linalg.svd(np.hstack([stages[i].A_matrix,stages[i].B_matrix]))
             n = np.count_nonzero(s>self.epsilon)
 
-            rs = np.sqrt(s[:n])
-            Us=U[:,:n]*rs
-            sVt=rs.reshape(-1,1)*Vt[:n,:]
+            Us=U[:,:n]*s[:n]
 
-            stages[i].A_matrix=sVt[:,:stages[i].A_matrix.shape[1]]
-            stages[i].B_matrix=sVt[:,stages[i].A_matrix.shape[1]:]
+            stages[i].A_matrix=Vt[:n,:stages[i].A_matrix.shape[1]]
+            stages[i].B_matrix=Vt[:n,stages[i].A_matrix.shape[1]:]
             stages[i-1].A_matrix = stages[i-1].A_matrix@Us
             stages[i-1].C_matrix = stages[i-1].C_matrix@Us
 
