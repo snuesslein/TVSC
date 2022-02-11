@@ -268,7 +268,7 @@ class StrictSystem(SystemInterface):
         reach_matricies = self.reachability_matricies()
         for i in range(len(reach_matricies)):
             if min(reach_matricies[i].shape)!=0:
-                if np.linalg.matrix_rank(reach_matricies[i],tol=tol)<min(reach_matricies[i].shape):
+                if np.linalg.matrix_rank(reach_matricies[i],tol=tol)<reach_matricies[i].shape[0]:
                     return False
         return True
 
@@ -284,7 +284,7 @@ class StrictSystem(SystemInterface):
         obs_matricies = self.observability_matricies()
         for i in range(len(obs_matricies)):
             if min(obs_matricies[i].shape)!=0:
-                if np.linalg.matrix_rank(obs_matricies[i],tol=tol)<min(obs_matricies[i].shape):
+                if np.linalg.matrix_rank(obs_matricies[i],tol=tol)<obs_matricies[i].shape[1]:
                     return False
         return True
 
