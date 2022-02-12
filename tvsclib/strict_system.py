@@ -265,10 +265,14 @@ class StrictSystem(SystemInterface):
         Returns:
             bool: True if system is fully reachable, false otherwise
         """
-        reach_matricies = self.reachability_matricies()
-        for i in range(len(reach_matricies)):
-            if min(reach_matricies[i].shape)!=0:
-                if np.linalg.matrix_rank(reach_matricies[i],tol=tol)<reach_matricies[i].shape[0]:
+        if self.causal: #choose iterator for causal/anticausal system
+            iter = range(1,len(self.stages))
+        else:
+            iter = range(len(self.stages)-2,-1,-1)
+        for i in iter:
+            R = self.reachability_matrix(i)
+            if min(R.shape)!=0:
+                if np.linalg.matrix_rank(R,tol=tol)<R.shape[0]:
                     return False
         return True
 
@@ -281,10 +285,14 @@ class StrictSystem(SystemInterface):
         Returns:
             bool: True if system is fully observable, false otherwise
         """
-        obs_matricies = self.observability_matricies()
-        for i in range(len(obs_matricies)):
-            if min(obs_matricies[i].shape)!=0:
-                if np.linalg.matrix_rank(obs_matricies[i],tol=tol)<obs_matricies[i].shape[1]:
+        if self.causal: #choose iterator for causal/anticausal system
+            iter = range(1,len(self.stages))
+        else:
+            iter = range(len(self.stages)-2,-1,-1)
+        for i in iter:
+            O = self.observability_matrix(i)
+            if min(O.shape)!=0:
+                if np.linalg.matrix_rank(O,tol=tol)<O.shape[1]:
                     return False
         return True
 

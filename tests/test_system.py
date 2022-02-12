@@ -1,8 +1,10 @@
 import numpy as np
 from tvsclib.canonical_form import CanonicalForm
 from tvsclib.mixed_system import MixedSystem
+from tvsclib.strict_system import StrictSystem
 from tvsclib.toeplitz_operator import ToeplitzOperator
 from tvsclib.system_identification_svd import SystemIdentificationSVD
+from tvsclib.stage import Stage
 
 def testSystem():
     dims_in =  [2, 1, 2, 1]
@@ -120,3 +122,76 @@ def testSystem():
 
     assert np.all([np.allclose(all_hankels[i],all_obs[i]@all_reach[i]) for i in range(len(all_hankels))]), \
     "Observability or Reachability matrix is incorrect for anticausal system"
+
+
+    #Test is_reachable/is_observabel and is_minimal
+    #Causal:
+    # Test a observabel and reachable system
+    vec_b=np.ones(3)
+    vec_c=np.ones(3)
+    B = np.diag(vec_b)
+    C = np.diag(vec_c)
+    stages = [Stage(np.zeros((3,0)),B,np.zeros((3,0)),np.eye(3)),Stage(np.zeros((0,3)),np.zeros((0,3)),C,np.eye(3))]
+    testsys = StrictSystem(causal=True,stages=stages)
+
+    assert testsys.is_observable(), "is_observable for causal system does not detect observable system"
+    assert testsys.is_reachable(), "is_reachable for causal system does not detect reachable system"
+    assert testsys.is_minimal(), "is_minimal for causal system does not detect observable system"
+
+
+    #now reduce one of the sigmas -> get a neither reachable nor observable system
+    vec_b[1]=1e-11
+    vec_c[1]=1e-11
+    B = np.diag(vec_b)
+    C = np.diag(vec_c)
+    stages = [Stage(np.zeros((3,0)),B,np.zeros((3,0)),np.eye(3)),Stage(np.zeros((0,3)),np.zeros((0,3)),C,np.eye(3))]
+    testsys = StrictSystem(causal=True,stages=stages)
+
+    assert not testsys.is_observable(), "is_observable for causal system does not detect sigma<tol"
+    assert not testsys.is_reachable(), "is_reachable for causal system does not detect sigma<tol"
+    assert not testsys.is_minimal(), "is_minimal for causal system does not detect sigma<tol"
+
+    # add an additional unnececarry state dim
+    B = np.vstack([np.eye(3),np.ones((1,3))])
+    C = np.hstack([np.eye(3),np.ones((3,1))])
+    stages = [Stage(np.zeros((4,0)),B,np.zeros((3,0)),np.eye(3)),Stage(np.zeros((0,4)),np.zeros((0,3)),C,np.eye(3))]
+    testsys = StrictSystem(causal=True,stages=stages)
+
+    assert not testsys.is_observable(), "is_observable for causal system does not detect additional dim"
+    assert not testsys.is_reachable(), "is_reachable for causal system does not detect additional dim"
+    assert not testsys.is_minimal(), "is_minimal for causal system does not detect additional dim"
+
+    #Anticausal:
+    # Test a observabel and reachable system
+    vec_b=np.ones(3)
+    vec_c=np.ones(3)
+    B = np.diag(vec_b)
+    C = np.diag(vec_c)
+    stages = [Stage(np.zeros((0,3)),np.zeros((0,3)),C,np.eye(3)),Stage(np.zeros((3,0)),B,np.zeros((3,0)),np.eye(3))]
+    testsys = StrictSystem(causal=False,stages=stages)
+
+    assert testsys.is_observable(), "is_observable for anticausal system does not detect observable system"
+    assert testsys.is_reachable(), "is_reachable for anticausal system does not detect reachable system"
+    assert testsys.is_minimal(), "is_minimal for anticausal system does not detect observable system"
+
+    #now reduce one of the sigmas -> get a neither reachable nor observable system
+    vec_b[1]=1e-11
+    vec_c[1]=1e-11
+    B = np.diag(vec_b)
+    C = np.diag(vec_c)
+    stages = [Stage(np.zeros((0,3)),np.zeros((0,3)),C,np.eye(3)),Stage(np.zeros((3,0)),B,np.zeros((3,0)),np.eye(3))]
+    testsys = StrictSystem(causal=False,stages=stages)
+
+    assert not testsys.is_observable(), "is_observable for anticausal system does not detect sigma<tol"
+    assert not testsys.is_reachable(), "is_reachable for anticausal system does not detect sigma<tol"
+    assert not testsys.is_minimal(), "is_minimal for anticausal system does not detect sigma<tol"
+
+    # add an additional unnececarry state dim
+    B = np.vstack([np.eye(3),np.ones((1,3))])
+    C = np.hstack([np.eye(3),np.ones((3,1))])
+    stages = [Stage(np.zeros((0,4)),np.zeros((0,3)),C,np.eye(3)),Stage(np.zeros((4,0)),B,np.zeros((3,0)),np.eye(3))]
+    testsys = StrictSystem(causal=False,stages=stages)
+
+    assert not testsys.is_observable(), "is_observable for anticausal system does not detect additional dim"
+    assert not testsys.is_reachable(), "is_reachable for anticausal system does not detect additional dim"
+    assert not testsys.is_minimal(), "is_minimal for anticausal system does not detect additional dim"
