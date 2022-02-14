@@ -195,3 +195,76 @@ def testSystem():
     assert not testsys.is_observable(), "is_observable for anticausal system does not detect additional dim"
     assert not testsys.is_reachable(), "is_reachable for anticausal system does not detect additional dim"
     assert not testsys.is_minimal(), "is_minimal for anticausal system does not detect additional dim"
+
+    # Test is_ordered for causal case
+    vec_b=np.ones(3)
+    vec_c=np.ones(3) #note here: we test the case >=
+    B = np.diag(vec_b)
+    C = np.diag(vec_c)
+    stages = [Stage(np.zeros((3,0)),B,np.zeros((3,0)),np.eye(3)),Stage(np.zeros((0,3)),np.zeros((0,3)),C,np.eye(3))]
+    testsys = StrictSystem(causal=True,stages=stages)
+
+    assert testsys.is_ordered(), "is_ordered for causal system does not detect ordered system"
+
+    B[1,2] = 1
+    stages = [Stage(np.zeros((3,0)),B,np.zeros((3,0)),np.eye(3)),Stage(np.zeros((0,3)),np.zeros((0,3)),C,np.eye(3))]
+    testsys = StrictSystem(causal=True,stages=stages)
+    assert not testsys.is_ordered(), "is_ordered for causal system does not detect a system with non orthogonal B"
+    B = np.diag(vec_b)
+    C[1,2] = 1
+    stages = [Stage(np.zeros((3,0)),B,np.zeros((3,0)),np.eye(3)),Stage(np.zeros((0,3)),np.zeros((0,3)),C,np.eye(3))]
+    testsys = StrictSystem(causal=True,stages=stages)
+    assert not testsys.is_ordered(), "is_ordered for causal system does not detect a system with non orthogonal C"
+
+    vec_b=np.array([0.89,0.9,1])
+    vec_c=np.ones(3)
+    B = np.diag(vec_b)
+    C = np.diag(vec_c)
+    stages = [Stage(np.zeros((3,0)),B,np.zeros((3,0)),np.eye(3)),Stage(np.zeros((0,3)),np.zeros((0,3)),C,np.eye(3))]
+    testsys = StrictSystem(causal=True,stages=stages)
+    assert not testsys.is_ordered(), "is_ordered for causal system does not detect increasing sigma_b"
+
+    vec_c=np.array([0.89,0.9,1])
+    vec_b=np.ones(3)
+    B = np.diag(vec_b)
+    C = np.diag(vec_c)
+    stages = [Stage(np.zeros((3,0)),B,np.zeros((3,0)),np.eye(3)),Stage(np.zeros((0,3)),np.zeros((0,3)),C,np.eye(3))]
+    testsys = StrictSystem(causal=True,stages=stages)
+    assert not testsys.is_ordered(), "is_ordered for causal system does not detect increasing sigma_c"
+
+
+    # Test is orderd for anticausal case
+    vec_b=np.ones(3)
+    vec_c=np.ones(3)
+    B = np.diag(vec_b)
+    C = np.diag(vec_c)
+    stages = [Stage(np.zeros((0,3)),np.zeros((0,3)),C,np.eye(3)),Stage(np.zeros((3,0)),B,np.zeros((3,0)),np.eye(3))]
+    testsys = StrictSystem(causal=False,stages=stages)
+
+    assert testsys.is_ordered(), "is_ordered for anticausal system does not detect ordered system"
+
+    B[1,2] = 1
+    stages = [Stage(np.zeros((0,3)),np.zeros((0,3)),C,np.eye(3)),Stage(np.zeros((3,0)),B,np.zeros((3,0)),np.eye(3))]
+    testsys = StrictSystem(causal=False,stages=stages)
+    assert not testsys.is_ordered(), "is_ordered for anticausal system does not detect a system with non orthogonal B"
+    B = np.diag(vec_b)
+    C[1,2] = 1
+    stages = [Stage(np.zeros((0,3)),np.zeros((0,3)),C,np.eye(3)),Stage(np.zeros((3,0)),B,np.zeros((3,0)),np.eye(3))]
+    testsys = StrictSystem(causal=False,stages=stages)
+    assert not testsys.is_ordered(), "is_ordered for anticausal system does not detect a system with non orthogonal C"
+
+    vec_c=np.array([0.89,0.9,1])
+    vec_b=np.ones(3)
+    B = np.diag(vec_b)
+    C = np.diag(vec_c)
+    stages = [Stage(np.zeros((0,3)),np.zeros((0,3)),C,np.eye(3)),Stage(np.zeros((3,0)),B,np.zeros((3,0)),np.eye(3))]
+    testsys = StrictSystem(causal=False,stages=stages)
+    assert not testsys.is_ordered(), "is_ordered for anticausal system does not detect increasing sigma_c"
+
+    vec_b=np.array([0.89,0.9,1])
+    vec_c=np.ones(3)
+    B = np.diag(vec_b)
+    C = np.diag(vec_c)
+    stages = [Stage(np.zeros((0,3)),np.zeros((0,3)),C,np.eye(3)),Stage(np.zeros((3,0)),B,np.zeros((3,0)),np.eye(3))]
+    testsys = StrictSystem(causal=False,stages=stages)
+    assert not testsys.is_ordered(), "is_ordered for anticausal system does not detect increasing sigma_b"

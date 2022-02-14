@@ -338,11 +338,15 @@ class StrictSystem(SystemInterface):
         Returns:
             bool: True if system is balanced
         """
-        obs_matricies = self.observability_matricies()
-        reach_matricies = self.reachability_matricies()
-        for i in range(len(obs_matricies)):
-            obs_gramian = obs_matricies[i].T@obs_matricies[i]
-            reach_gramian =reach_matricies[i]@reach_matricies[i].T
+        if self.causal: #choose iterator for causal/anticausal system
+            iter = range(1,len(self.stages))
+        else:
+            iter = range(len(self.stages)-2,-1,-1)
+        for i in iter:
+            obs_matrix = self.observability_matrix(i)
+            reach_matrix = self.reachability_matrix(i)
+            obs_gramian = obs_matrix.T@obs_matrix
+            reach_gramian =reach_matrix@reach_matrix.T
             d_obs = np.diag(obs_gramian).copy()
             d_reach = np.diag(reach_gramian).copy()
 
@@ -357,6 +361,53 @@ class StrictSystem(SystemInterface):
             #check if the singular values are in decreasing oder
             #here we have a small margin for round-off error
             #ordered = balanced and np.all(d_reach[1:]-d_reach[:-1]<1e-16)
+        return True
+
+    def is_ordered(self,tolerance:float = 1e-15) -> bool:
+        """is_canonical checks if realization is ordered
+
+        Check if the collumns in O are orthogonal and the rows in R orthogonal,
+        and they are ordered in by length in decreasing order
+
+        If the realization is ordered, the observability and
+        reachability matrices can be written as:
+            R = D_r V^T
+            O = U D_o
+        With D_r and Q_o orthogonal matrices and D_r and D_o are diagonal matrices
+            H = OR = Q_o D_o D_r Q_r = UsV^T
+        If the system is ordered, the system can be approxiamted by cutting tailing states.
+
+        Note:  do_i >= do_{i+1} and dr_i >= dr_{i+1}
+                => do_i dr_i >= do_{i+1}dr_{i+1}
+
+        Args:
+            tolerance
+
+        Returns:
+            bool: True if system is ordered
+        """
+        if self.causal: #choose iterator for causal/anticausal system
+            iter = range(1,len(self.stages))
+        else:
+            iter = range(len(self.stages)-2,-1,-1)
+        for i in iter:
+            obs_matrix = self.observability_matrix(i)
+            reach_matrix = self.reachability_matrix(i)
+            obs_gramian = obs_matrix.T@obs_matrix
+            reach_gramian =reach_matrix@reach_matrix.T
+            d_obs = np.diag(obs_gramian).copy()
+            d_reach = np.diag(reach_gramian).copy()
+
+            #check if the vectors are orthogonal
+            np.fill_diagonal(obs_gramian,0)
+            np.fill_diagonal(reach_gramian,0)
+            obs_orth = np.all(np.abs(obs_gramian) <tolerance)
+            reach_orth = np.all(np.abs(reach_gramian) <tolerance)
+            #check if the singular values are in decreasing oder
+            #here we have a small margin for round-off error
+            ordered = np.all(d_obs[1:]-d_obs[:-1]<1e-16) and np.all(d_reach[1:]-d_reach[:-1]<1e-16)
+            if not (obs_orth and reach_orth and ordered):
+                return False
         return True
 
     def reachability_matricies(self) -> List[np.ndarray]:
