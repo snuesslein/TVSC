@@ -14,10 +14,11 @@ class Approximation:
         self,system):
         """__init__ Constructor for Approxiamtion Object
 
+        Class to create an approxiamtion of an system.
         This takes the system and first converts it into a ordered representation
-        During this the singualr values of the Hankel operators are stored
+        During this the singualr values of the Hankel operators are calculated and stored
 
-        Later the
+        Later an approxiamted system can be obtianed
         Args:
 
         """
@@ -39,7 +40,7 @@ class Approximation:
     def _transform_sigmas_causal(self):
         """ transforms the causal system
 
-            to a ordered realization and sets the sigmas_causal
+            transforms the causal system to a ordered realization and sets the sigmas_causal
         """
         self.sigmas_causal=[]
         stages = self.stages_causal
@@ -74,9 +75,9 @@ class Approximation:
 
 
     def _transform_sigmas_anticausal(self):
-        """ transforms the causal system
+        """ transforms the anticausal system
 
-            to a ordered realization and sets the sigmas_causal
+            transforms the anticausal system to a ordered realization and sets the sigmas_causal
         """
         self.sigmas_anticausal=[]
         stages = self.stages_anticausal
@@ -108,21 +109,6 @@ class Approximation:
 
 
 
-    def get_sigmas_causal(self,stages:List[Stage]) -> List[np.ndarray]:
-        """ get_sigmas_causal returns the sigmas for the causal system
-
-        Returns:
-            List[np.ndarray]: list of sigmas of the states
-        """
-        return self.sigmas_causal
-
-    def get_sigmas_anticausal(self,stages:List[Stage]) -> List[np.ndarray]:
-        """ get_sigmas_anticausal returns the sigmas for the anticausal system
-
-        Returns:
-            List[np.ndarray]: list of sigmas of the states
-        """
-        return self.sigmas_causal
 
     def _get_approxiamtion_causal(self,epsilon):
         """get an approxiamted system
@@ -189,8 +175,11 @@ class Approximation:
     def get_approxiamtion(self, epsilon) -> T:
         """get an approxiamted system
 
+        This function creates the approxiamted system.
+        For this all the state dims corresponding to sigmas <= epsilon are removed
+
         Args:
-            epsilon (float): Epsilon
+            epsilon (float): epsilon for truncation of states
 
         Returns:
             SystemInterface: Approxiamtion

@@ -371,14 +371,18 @@ class StrictSystem(SystemInterface):
 
         If the realization is ordered, the observability and
         reachability matrices can be written as:
-            R = D_r V^T
-            O = U D_o
-        With D_r and Q_o orthogonal matrices and D_r and D_o are diagonal matrices
-            H = OR = Q_o D_o D_r Q_r = UsV^T
+
+        R = D_R V^T
+        O = U D_O
+
+        With V^T and U suborthogonal matrices
+        and D_R and D_O are diagonal matrices
+
+        H = OR = U D_O D_R V^T = UsV^T
+
         If the system is ordered, the system can be approxiamted by cutting tailing states.
 
-        Note:  do_i >= do_{i+1} and dr_i >= dr_{i+1}
-                => do_i dr_i >= do_{i+1}dr_{i+1}
+        Note: do_i >= do_{i+1} and dr_i >= dr_{i+1} implies do_i dr_i <= do_{i+1}dr_{i+1}
 
         Args:
             tolerance
@@ -469,14 +473,20 @@ class StrictSystem(SystemInterface):
         """observability_matricx Returns observability matrix for index k.
         This represents the mapping from the state x_i to the relevant outputs
         In the causal case this is:
-            [C_k,
-            C_{k+1}A_k,
-            ...]
+
+        [C_k,
+
+        C_{k+1}A_k,
+
+        ...]
 
         In the anticausal case this is
-            [...,
-            C_{k-1}A_k,
-            C_k]
+
+        [...,
+
+        C_{k-1}A_k,
+
+        C_k]
 
         See also TVSC Lecture slides Unit 5.5 page 2.
 
