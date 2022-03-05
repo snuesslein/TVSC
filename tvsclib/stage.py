@@ -14,7 +14,7 @@ class Stage:
         self.B_matrix = B_matrix.copy()
         self.C_matrix = C_matrix.copy()
         self.D_matrix = D_matrix.copy()
-    
+
     @property
     def dim_in(self) -> int:
         """dim_in Input size
@@ -37,7 +37,9 @@ class Stage:
     def dim_state(self) -> int:
         """dim_state Size of the state space
 
+        Note here that the state dim for a stage is the input state dims.
+        This makes the indecing consistent with the formulas
         Returns:
             int: Size of the state space
         """
-        return self.A_matrix.shape[0]
+        return self.A_matrix.shape[1]

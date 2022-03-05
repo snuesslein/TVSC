@@ -6,6 +6,7 @@ from typing import List, Tuple
 from tvsclib.stage import Stage
 from tvsclib.system_identification_interface import SystemIdentificationInterface
 from tvsclib.system_interface import SystemInterface
+from tvsclib.math import cost
 
 class StrictSystem(SystemInterface):
     def __init__(self, causal:bool, system_identification:SystemIdentificationInterface = None, stages:List[Stage] = None):
@@ -87,10 +88,29 @@ class StrictSystem(SystemInterface):
     def dims_state(self) -> List[int]:
         """dims_state State dimensions for each time step
 
+        For causal systems the indexing is consistent with the formula.
+        For anticausal systems one has to use dims_state[k+1] to get the k-th state dim,
+        as the -1-th state dim is included as first element.
+
         Returns:
             List[int]: State dimensions for each time step
         """
-        return [el.dim_state for el in self.stages]
+        dims = [el.dim_state for el in self.stages]
+        if self.causal:
+            dims.append(self.stages[-1].A_matrix.shape[0])
+            return dims
+        else:
+            dims.insert(0,self.stages[0].A_matrix.shape[0])
+            return dims
+
+    def cost(self,include_add=False) -> integer:
+        """calculate the cost of the system
+
+        this function return the number of FLOPs required to evalaute the system
+
+        if include_add is set to False, thsi is also the number of parameters
+        """
+        return cost(self.dims_in,self.dims_out,self.dims_state,self.causal,include_add=include_add)
 
     def compute(
         self, input:np.ndarray, start_index:int=0,

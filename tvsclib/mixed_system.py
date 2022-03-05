@@ -46,6 +46,16 @@ class MixedSystem(SystemInterface):
         """
         return self.causal_system.dims_out
 
+    def cost(self,include_add=False) -> integer:
+        """calculate the cost of the system
+
+        this function return the number of FLOPs required to evalaute the system
+
+        if include_add is set to False, thsi is also the number of parameters
+        """
+        return self.causal_system.cost(include_add=include_add)+self.anticausal_system.cost(include_add=include_add)
+
+
     def copy(self) -> MixedSystem:
         """copy Returns a copy of this system
 

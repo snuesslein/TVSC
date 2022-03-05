@@ -76,14 +76,25 @@ def testSystem():
         u_i = u[sum(dims_in[0:i]):sum(dims_in[0:i+1])]
         x_i,y_i = system.compute(u_i, i, 1, np.vstack([all_x_causal[i], all_x_anticausal[i+1]]))
         all_x.append(x_i)
-        all_x_part_causal.append(x_i[0:system.causal_system.dims_state[i]])
-        all_x_part_anticausal.append(x_i[system.causal_system.dims_state[i]:])
+        all_x_part_causal.append(x_i[0:system.causal_system.dims_state[i+1]])
+        all_x_part_anticausal.append(x_i[system.causal_system.dims_state[i+1]:])
         all_y.append(y_i)
 
     all_x_resorted = [*all_x_part_causal, *all_x_part_anticausal]
 
     assert np.allclose(y, np.vstack(all_y)), "Mixed system sequential computation of y is wrong"
     assert np.allclose(x_s, np.vstack(all_x_resorted)), "Mixed system sequential computation of x is wrong"
+
+    #check Cons
+    #calculate the number of parameters with a sum over the stages
+    cost_causal = sum([stage.A_matrix.size + stage.B_matrix.size + stage.C_matrix.size + stage.D_matrix.size \
+        for stage in system.causal_system.stages])
+    cost_anticausal = sum([stage.A_matrix.size + stage.B_matrix.size + stage.C_matrix.size + stage.D_matrix.size \
+        for stage in system.anticausal_system.stages])
+
+    assert cost_causal == system.causal_system.cost(), "Causal cost is incorrect"+ str(cost_causal)+" "+str(system.causal_system.cost())
+    assert cost_anticausal == system.anticausal_system.cost(), "Anticausal cost is incorrect"
+    assert cost_causal+cost_anticausal == system.cost(), "Mixed cost is incorrect"
 
     #check observability and reachability_matrix
     #causal_system
