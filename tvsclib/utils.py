@@ -45,7 +45,7 @@ def show_system(system):
 def check_dims(system,dim_state_in=0,dim_state_out=0,text_output=True,return_report=False):
     """check_dims Test if the dimentions of the matrices are correct
         Args:
-            system (StrictSystem): Causal system to check
+            system (StrictSystem/MixedSystem): system to check
             dim_state_in (int): input state of first dim (default is 0)
             dim_state_out (int): output state of last dim (default is 0)
             text_output (bool): if True the function prints the result
@@ -60,6 +60,30 @@ def check_dims(system,dim_state_in=0,dim_state_out=0,text_output=True,return_rep
     correct = True
     dim_state = dim_state_in
     #iterate up or down depending on causal/anticausal, the rest stays the same
+    if type(system)==tvsclib.mixed_system.MixedSystem:
+        result_causal,report_causal = check_dims(system.causal_system,dim_state_in=dim_state_in,
+            dim_state_out=dim_state_out,text_output=False,return_report=True)
+        result_anticausal,report_anticausal = check_dims(system.anticausal_system,dim_state_in=dim_state_in,
+            dim_state_out=dim_state_out,text_output=False,return_report=True)
+
+        if text_output:
+            if result_causal:
+                print("Casual Matrix shapes are correct")
+            else:
+                print("Causal Matrix shapes are not correct")
+                print(report_causal)
+            if result_anticausal:
+                print("Anticasual Matrix shapes are correct")
+            else:
+                print("Anticausal Matrix shapes are not correct")
+                print(report_anticausal)
+        if return_report:
+            return result_causal and result_anticausal,\
+            "Causal: \n"+report_causal+"\n Anticausal: \n"+report_anticausal
+        else:
+            return result_causal and result_anticausal
+
+
     if system.causal:
         it = range(len(system.stages))
     else:
