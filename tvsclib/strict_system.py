@@ -55,6 +55,15 @@ class StrictSystem(SystemInterface):
                 description += "    System is reachable"
         if not observable and not reachable:
             description += "    System is neither reachable nor observable"
+
+        if self.is_input_normal():
+            description +="    System is input normal"
+        if self.is_output_normal():
+            description +="    System is output normal"
+        if self.is_balanced():
+            description +="    System is balanced"
+        if self.is_ordered():
+            description +="    System is ordered"
         return description
 
 

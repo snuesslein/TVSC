@@ -25,6 +25,31 @@ def hankelnorm(A, dims_in,dims_out):
     s_a = [np.max(np.linalg.svd(A[:np.sum(dims_out[:k+1]),-np.sum(dims_in[k+1:]):],compute_uv=False)) for k in range(n-2,-1,-1)]
     return max(max(s_c),max(s_a))
 
+def extract_sigmas(A, dims_in,dims_out):
+    """calculates the singular Values for the matrix A
+
+    calculates the singular values of the Hankel operators of the Matrix A
+    with the given segementation.
+
+
+        Args:
+            A (numpy.ndarray):      Matrix to calculate the hankel norm
+            dims_in (List[int]):    input dimension
+            dims_out (List[int]):   output dimension
+
+        Returns:
+            float:  Hankel norm of A
+    """
+
+    #for more details on the implementation see the notebook on Obs and Reach
+    sigmas_causal = []
+    sigmas_anticausal = []
+    n = len(dims_in)
+    for k in range(1,n):
+        sigmas_causal.append(np.linalg.svd(A[-np.sum(dims_out[k:]):,:np.sum(dims_in[:k])],compute_uv=False))
+    for k in range(0,n-1):
+        sigmas_anticausal.append(np.linalg.svd(A[:np.sum(dims_out[:k+1]),-np.sum(dims_in[k+1:]):],compute_uv=False))
+    return (sigmas_causal,sigmas_anticausal)
 
 def cost(dims_in,dims_out,dims_state,causal,include_add=False):
     """calculates the computational cost

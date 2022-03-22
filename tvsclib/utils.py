@@ -1,20 +1,23 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.collections import PatchCollection
 import tvsclib
 
 
 
-def show_system(system):
+def show_system(system,mark_D=True):
     """show_system display a graphical representation of the system
 
     function that uses matshow to display the resulting matrix
     and also shows the divisions of the input and output
 
         Args:
-            sysstem [StrictSystem or MixedSystem]: System to display
+            system (StrictSystem or MixedSystem): System to display
+            mark_D (bool): If True the Ds are shaded
 
-    TODO: possible additioanl fature: mark D with different color/linstyle
+
     """
+    plt.figure()
     mat = system.to_matrix()
     plt.matshow(mat)
     x=-0.5
@@ -26,7 +29,7 @@ def show_system(system):
 
         for d_out in system.dims_out:
             y+=d_out
-            plt.hlines(y,-0.5,mat.shape[0]-0.5)
+            plt.hlines(y,-0.5,mat.shape[1]-0.5)
 
     elif system.causal:
         for st in system.stages:
@@ -41,6 +44,21 @@ def show_system(system):
             plt.vlines(x,-0.5,y)
             x+=st.dim_in
 
+    if mark_D:
+        facecolor='k'
+        edgecolor='none'
+        alpha=0.4
+        Dboxes =[]
+        x=-0.5
+        y=-0.5
+        for (w,h) in zip(system.dims_in,system.dims_out):
+            Dboxes.append(plt.Rectangle((x,y),w,h))
+            x += w
+            y += h
+
+        pc = PatchCollection(Dboxes, facecolor=facecolor, alpha=alpha,
+                         edgecolor=edgecolor)
+        plt.gca().add_collection(pc)
 
 def check_dims(system,dim_state_in=0,dim_state_out=0,text_output=True,return_report=False):
     """check_dims Test if the dimentions of the matrices are correct
