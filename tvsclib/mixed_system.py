@@ -46,6 +46,15 @@ class MixedSystem(SystemInterface):
         """
         return self.causal_system.dims_out
 
+    @property
+    def T(self) -> MixedSystem:
+        """transpose Transposed system
+
+        Returns:
+            MixedSystem: Transposition result
+        """
+        return self.transpose()
+
     def cost(self,include_add=False,include_both_D=False) -> integer:
         """calculate the cost of the system
 
@@ -139,6 +148,15 @@ class MixedSystem(SystemInterface):
         ])
         y_result = y_causal + y_anticausal
         return (x_result,y_result)
+
+    def transpose(self) -> MixedSystem:
+        """transpose Transposed system
+
+        Returns:
+            MixedSystem: Transposition result
+        """
+        return MixedSystem(causal_system=self.anticausal_system.transpose(),\
+                           anticausal_system=self.causal_system.transpose())
 
     def urv_decomposition(self) -> Tuple[StrictSystem, StrictSystem, StrictSystem, StrictSystem]:
         """urv_decomposition Decomposes the system into U*R*v'*V, where U is isometric,

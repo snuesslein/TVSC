@@ -112,6 +112,16 @@ class StrictSystem(SystemInterface):
             dims.insert(0,self.stages[0].A_matrix.shape[0])
             return dims
 
+
+    @property
+    def T(self) -> MixedSystem:
+        """transpose Transposed system
+
+        Returns:
+            StrictSystem: Transposition result
+        """
+        return self.transpose()
+
     def cost(self,include_add=False,include_D=True) -> integer:
         """calculate the cost of the system
 
@@ -719,18 +729,11 @@ class StrictSystem(SystemInterface):
                 ])
             ])
             # Econ RQ-Decomposition
-            X_matrix = X_matrix[
-                range(X_matrix.shape[0]-1,-1,-1),:]
+            X_matrix = np.flipud(X_matrix)
             Q_matrix, R_matrix = np.linalg.qr(
                 X_matrix.transpose(), mode='reduced')
-            Q_matrix = Q_matrix.transpose()
-            Q_matrix = Q_matrix[
-                range(Q_matrix.shape[0]-1,-1,-1),:]
-            R_matrix = R_matrix.transpose()
-            R_matrix = R_matrix[
-                range(R_matrix.shape[0]-1,-1,-1),:]
-            R_matrix = R_matrix[
-                :,range(R_matrix.shape[1]-1,-1,-1)]
+            Q_matrix = np.flipud(Q_matrix.transpose())
+            R_matrix = np.fliplr(np.flipud(R_matrix.transpose()))
 
             no_rows_Y = R_matrix.shape[0] - system.stages[i].D_matrix.shape[0]
             no_cols_Y = R_matrix.shape[1] - system.stages[i].D_matrix.shape[0]
@@ -791,16 +794,11 @@ class StrictSystem(SystemInterface):
             ])
             # Econ QL-Decomposition
             X_matrix = X_matrix.transpose()
-            X_matrix = X_matrix[
-                range(X_matrix.shape[0]-1,-1,-1),:]
+            X_matrix = np.flipud(X_matrix)
             Q_matrix, L_matrix = np.linalg.qr(
                 X_matrix.transpose(), mode='reduced')
-            Q_matrix = Q_matrix[
-                :,range(Q_matrix.shape[1]-1,-1,-1)]
-            L_matrix = L_matrix[
-                range(L_matrix.shape[0]-1,-1,-1),:]
-            L_matrix = L_matrix[
-                :,range(L_matrix.shape[1]-1,-1,-1)]
+            Q_matrix = np.fliplr(Q_matrix)
+            L_matrix = np.fliplr(np.flipud(L_matrix))
 
             no_rows_Y = L_matrix.shape[0] - system.stages[i].D_matrix.shape[1]
             no_rows_Y = max(0, no_rows_Y)
