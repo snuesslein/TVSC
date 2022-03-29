@@ -46,14 +46,19 @@ class MixedSystem(SystemInterface):
         """
         return self.causal_system.dims_out
 
-    def cost(self,include_add=False) -> integer:
+    def cost(self,include_add=False,include_both_D=False) -> integer:
         """calculate the cost of the system
 
         this function return the number of FLOPs required to evalaute the system
-
         if include_add is set to False, thsi is also the number of parameters
+        Args:
+            include_add     (bool):     If True the number of additions is inluded. Default is False
+            inlcude_both_D (bool):     If True the D-matrices of the anticausal system are included. Default is False
+
+                Returns:
+                    int:  Number of FLOPs
         """
-        return self.causal_system.cost(include_add=include_add)+self.anticausal_system.cost(include_add=include_add)
+        return self.causal_system.cost(include_add=include_add)+self.anticausal_system.cost(include_add=include_add,include_D=include_both_D)
 
 
     def copy(self) -> MixedSystem:

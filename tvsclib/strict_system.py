@@ -112,14 +112,20 @@ class StrictSystem(SystemInterface):
             dims.insert(0,self.stages[0].A_matrix.shape[0])
             return dims
 
-    def cost(self,include_add=False) -> integer:
+    def cost(self,include_add=False,include_D=True) -> integer:
         """calculate the cost of the system
 
         this function return the number of FLOPs required to evalaute the system
-
         if include_add is set to False, thsi is also the number of parameters
+        Args:
+            include_add (bool):     If True the number of additions is inluded. Default is False
+            inlcude_D   (bool):     If True the D-matrices are included. Default is False
+
+                Returns:
+                    int:  Number of FLOPs
         """
-        return cost(self.dims_in,self.dims_out,self.dims_state,self.causal,include_add=include_add)
+        return cost(self.dims_in,self.dims_out,self.dims_state,self.causal,
+                include_add=include_add,include_D=include_D)
 
     def compute(
         self, input:np.ndarray, start_index:int=0,

@@ -94,8 +94,9 @@ def testSystem():
 
     assert cost_causal == system.causal_system.cost(), "Causal cost is incorrect"+ str(cost_causal)+" "+str(system.causal_system.cost())
     assert cost_anticausal == system.anticausal_system.cost(), "Anticausal cost is incorrect"
-    assert cost_causal+cost_anticausal == system.cost(), "Mixed cost is incorrect"
-
+    assert cost_causal+cost_anticausal == system.cost(include_both_D=True), "Mixed cost is incorrect with both D"
+    assert cost_causal+cost_anticausal-sum([stage.D_matrix.size for stage in system.anticausal_system.stages])\
+            == system.cost(), "Mixed cost is incorrect"
     #check observability and reachability_matrix
     #causal_system
     all_obs = []

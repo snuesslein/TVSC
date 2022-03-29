@@ -51,7 +51,7 @@ def extract_sigmas(A, dims_in,dims_out):
         sigmas_anticausal.append(np.linalg.svd(A[:np.sum(dims_out[:k+1]),-np.sum(dims_in[k+1:]):],compute_uv=False))
     return (sigmas_causal,sigmas_anticausal)
 
-def cost(dims_in,dims_out,dims_state,causal,include_add=False):
+def cost(dims_in,dims_out,dims_state,causal,include_add=False,include_D=True):
     """calculates the computational cost
 
     This return the FLOPs needed to calcualte the output for a input vector
@@ -62,11 +62,11 @@ def cost(dims_in,dims_out,dims_state,causal,include_add=False):
 
     Without additions:
 
-    n_{k+1}*n_k + n{k+1}*m_k+p_k*n_k+p_k*m_k
+    n_{k+1}*n_k + n_{k+1}*m_k+p_k*n_k+p_k*m_k
 
     With additions:
 
-    n_{k+1}*(2*n_k-1) + n{k+1}*(2*m_k-1)+p_k*(2*n_k-1)+p_k*(2*m_k-1)
+    n_{k+1}*(2*n_k-1) + n_{k+1}*(2*m_k-1)+p_k*(2*n_k-1)+p_k*(2*m_k-1)
 
     The case without additions is equal to the number of parameters
 
@@ -74,6 +74,8 @@ def cost(dims_in,dims_out,dims_state,causal,include_add=False):
             dims_in (List[int]):    input dimension
             dims_out (List[int]):   output dimension
             dims_state (List[int]): state dimension
+            include_add (bool):     If True the number of additions is inluded. Default is False
+            inlcude_D (bool):       If True the D-matrices are inluded. Default is True
 
         Returns:
             int:  Number of FLOPs
@@ -88,6 +90,12 @@ def cost(dims_in,dims_out,dims_state,causal,include_add=False):
         p = np.array(dims_out[::-1])
         n = np.array(dims_state[::-1])
     if include_add:
-        return np.sum(n[1:]*(2*n[:-1]-1) + n[1:]*(2*m-1)+p*(2*n[:-1]-1)+p*(2*m-1))
+        if include_D:
+            return np.sum(n[1:]*(2*n[:-1]-1) + n[1:]*(2*m-1)+p*(2*n[:-1]-1)+p*(2*m-1))
+        else:
+            return np.sum(n[1:]*(2*n[:-1]-1) + n[1:]*(2*m-1)+p*(2*n[:-1]-1))
     else:
-        return np.sum(n[1:]*n[:-1] + n[1:]*m+p*n[:-1]+p*m)
+        if include_D:
+            return np.sum(n[1:]*n[:-1] + n[1:]*m+p*n[:-1]+p*m)
+        else:
+            return np.sum(n[1:]*n[:-1] + n[1:]*m+p*n[:-1])
