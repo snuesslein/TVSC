@@ -1,4 +1,5 @@
 import numpy as np
+import tvsclib
 
 def hankelnorm(A, dims_in,dims_out):
     """calculates the Hankel Norm
@@ -24,6 +25,63 @@ def hankelnorm(A, dims_in,dims_out):
     s_c = [np.max(np.linalg.svd(A[-np.sum(dims_out[k:]):,:np.sum(dims_in[:k])],compute_uv=False)) for k in range(1,n)]
     s_a = [np.max(np.linalg.svd(A[:np.sum(dims_out[:k+1]),-np.sum(dims_in[k+1:]):],compute_uv=False)) for k in range(n-2,-1,-1)]
     return max(max(s_c),max(s_a))
+
+
+def _frobeniusnorm_squared_causal(stages):
+    K = stages[0].B_matrix@stages[0].B_matrix.T
+    v = 0
+    for stage in stages[1:]:
+        v += np.trace(stage.C_matrix@K@stage.C_matrix.T)#TODO evtl eisum notation
+        K = stage.A_matrix@K@stage.A_matrix.T+stage.B_matrix@stage.B_matrix.T
+    return v
+
+
+def _frobeniusnorm_squared_anticausal(stages):
+    K = stages[0].C_matrix.T@stages[0].C_matrix
+    v = 0
+    for stage in stages[1:]:
+        v += np.trace(stage.B_matrix.T@K@stage.B_matrix)
+        K = stage.A_matrix.T@K@stage.A_matrix+stage.C_matrix.T@stage.C_matrix
+    return v
+
+def frobeniusnorm(system):
+    """ calculates the frobeniusnorm
+
+    Caclulates the frobeniusnorm of a system
+
+    ||A||_2 = tr (AA^T)
+
+    Using thsi formula the norm can be calcuated without caclulating the matrix 
+
+        Args:
+            system (StrictSystem/MixedSystem): system to calc the frobeniusnorm
+
+        Returns
+            flat:  Frobenoiusnorm of system
+
+    TODO: tests and cleanup doc
+    """
+    #define a convenience function for the dum of the trace of A@A.T
+    #is basically norm(A)**2
+    def _sum_trace(A):
+        a = np.ravel(A,'K')
+        return a@a
+
+    if type(system)==tvsclib.mixed_system.MixedSystem:
+        return np.sqrt(np.sum([_sum_trace(stage.D_matrix+stage_a.D_matrix)
+                     for stage,stage_a in zip(system.causal_system.stages,system.anticausal_system.stages) ])\
+                     +_frobeniusnorm_squared_causal(system.causal_system.stages)\
+                     +_frobeniusnorm_squared_anticausal(system.anticausal_system.stages))
+    else:
+        if system.causal:
+            return np.sqrt(np.sum([_sum_trace(stage.D_matrix) for stage in system.stages])\
+                    +_frobeniusnorm_squared_causal(system.stages))
+        else:
+            return np.sqrt(np.sum([_sum_trace(stage.D_matrix) for stage in system.stages])\
+                    +_frobeniusnorm_squared_anticausal(system.stages))
+
+
+
 
 def extract_sigmas(A, dims_in,dims_out):
     """calculates the singular Values for the matrix A
