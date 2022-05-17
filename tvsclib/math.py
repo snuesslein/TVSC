@@ -22,8 +22,8 @@ def hankelnorm(A, dims_in,dims_out):
 
     #for more details on the implementation see the notebook on Obs and Reach
     n = len(dims_in)
-    s_c = [np.max(np.linalg.svd(A[-np.sum(dims_out[k:]):,:np.sum(dims_in[:k])],compute_uv=False)) for k in range(1,n)]
-    s_a = [np.max(np.linalg.svd(A[:np.sum(dims_out[:k+1]),-np.sum(dims_in[k+1:]):],compute_uv=False)) for k in range(n-2,-1,-1)]
+    s_c = [np.max(np.linalg.svd(A[A.shape[0]-np.sum(dims_out[k:]):,:np.sum(dims_in[:k])],compute_uv=False)) for k in range(1,n)]
+    s_a = [np.max(np.linalg.svd(A[:np.sum(dims_out[:k+1]),A.shape[1]-np.sum(dims_in[k+1:]):],compute_uv=False)) for k in range(n-2,-1,-1)]
     return max(max(s_c),max(s_a))
 
 
@@ -51,7 +51,7 @@ def frobeniusnorm(system):
 
     ||A||_2 = tr (AA^T)
 
-    Using thsi formula the norm can be calcuated without caclulating the matrix 
+    Using this formula the norm can be calcuated without caclulating the matrix
 
         Args:
             system (StrictSystem/MixedSystem): system to calc the frobeniusnorm
@@ -96,7 +96,7 @@ def extract_sigmas(A, dims_in,dims_out):
             dims_out (List[int]):   output dimension
 
         Returns:
-            float:  Hankel norm of A
+            sigmas_causal,sigmas_anticausal (List[List[float]]):   Lsits with the singular values
     """
 
     #for more details on the implementation see the notebook on Obs and Reach
@@ -104,9 +104,9 @@ def extract_sigmas(A, dims_in,dims_out):
     sigmas_anticausal = []
     n = len(dims_in)
     for k in range(1,n):
-        sigmas_causal.append(np.linalg.svd(A[-np.sum(dims_out[k:]):,:np.sum(dims_in[:k])],compute_uv=False))
+        sigmas_causal.append(np.linalg.svd(A[np.sum(dims_out)-np.sum(dims_out[k:]):,:np.sum(dims_in[:k])],compute_uv=False))
     for k in range(0,n-1):
-        sigmas_anticausal.append(np.linalg.svd(A[:np.sum(dims_out[:k+1]),-np.sum(dims_in[k+1:]):],compute_uv=False))
+        sigmas_anticausal.append(np.linalg.svd(A[:np.sum(dims_out[:k+1]),np.sum(dims_in)-np.sum(dims_in[k+1:]):],compute_uv=False))
     return (sigmas_causal,sigmas_anticausal)
 
 def cost(dims_in,dims_out,dims_state,causal,include_add=False,include_D=True):
