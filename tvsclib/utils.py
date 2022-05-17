@@ -5,7 +5,7 @@ import tvsclib
 
 
 
-def show_system(system,mark_D=True):
+def show_system(system,mark_D=True,ax=None):
     """show_system display a graphical representation of the system
 
     function that uses matshow to display the resulting matrix
@@ -17,31 +17,35 @@ def show_system(system,mark_D=True):
 
 
     """
-    plt.figure()
     mat = system.to_matrix()
-    plt.matshow(mat)
+    if ax is None:
+        plt.matshow(mat)
+        ax = plt.gca()
+    else:
+        ax.matshow(mat)
+
     x=-0.5
     y=-0.5
     if type(system)==tvsclib.mixed_system.MixedSystem:
         for d_in in system.dims_in:
             x+=d_in
-            plt.vlines(x,-0.5,mat.shape[0]-0.5)
+            ax.vlines(x,-0.5,mat.shape[0]-0.5)
 
         for d_out in system.dims_out:
             y+=d_out
-            plt.hlines(y,-0.5,mat.shape[1]-0.5)
+            ax.hlines(y,-0.5,mat.shape[1]-0.5)
 
     elif system.causal:
         for st in system.stages:
             x+=st.dim_in
-            plt.hlines(y,-0.5,x)
-            plt.vlines(x,y,mat.shape[0]-0.5)
+            ax.hlines(y,-0.5,x)
+            ax.vlines(x,y,mat.shape[0]-0.5)
             y+=st.dim_out
     else:
         for st in system.stages:
             y+=st.dim_out
-            plt.hlines(y,x,mat.shape[1]-0.5)
-            plt.vlines(x,-0.5,y)
+            ax.hlines(y,x,mat.shape[1]-0.5)
+            ax.vlines(x,-0.5,y)
             x+=st.dim_in
 
     if mark_D:
@@ -58,7 +62,8 @@ def show_system(system,mark_D=True):
 
         pc = PatchCollection(Dboxes, facecolor=facecolor, alpha=alpha,
                          edgecolor=edgecolor)
-        plt.gca().add_collection(pc)
+        ax.add_collection(pc)
+
 
 def check_dims(system,dim_state_in=0,dim_state_out=0,text_output=True,return_report=False):
     """check_dims Test if the dimentions of the matrices are correct
