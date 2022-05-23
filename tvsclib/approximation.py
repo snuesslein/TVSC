@@ -11,7 +11,7 @@ T = TypeVar('T',StrictSystem,MixedSystem)
 
 class Approximation:
     def __init__(
-        self,system):
+        self,system,sigmas=None):
         """__init__ Constructor for Approxiamtion Object
 
         Class to create an approxiamtion of an system.
@@ -22,20 +22,33 @@ class Approximation:
         Args:
 
         """
-        self.system = system
-        sigmas_causal = None
-        sigmas_anticausal = None
-        if type(system)==MixedSystem:
-            self.stages_causal = self.system.causal_system.stages
-            self.stages_anticausal = self.system.anticausal_system.stages
-            self._transform_sigmas_causal()
-            self._transform_sigmas_anticausal()
-        elif system.causal:
-            self.stages_causal = self.system.stages
-            self._transform_sigmas_causal()
+        if sigmas is None:
+            self.system = system
+            sigmas_causal = None
+            sigmas_anticausal = None
+            if type(system)==MixedSystem:
+                self.stages_causal = self.system.causal_system.stages
+                self.stages_anticausal = self.system.anticausal_system.stages
+                self._transform_sigmas_causal()
+                self._transform_sigmas_anticausal()
+            elif system.causal:
+                self.stages_causal = self.system.stages
+                self._transform_sigmas_causal()
+            else:
+                self.stages_anticausal = self.system.stages
+                self._transform_sigmas_anticausal()
         else:
-            self.stages_anticausal = self.system.stages
-            self._transform_sigmas_anticausal()
+            self.system = system
+            if type(system)==MixedSystem:
+                self.stages_causal = self.system.causal_system.stages
+                self.stages_anticausal = self.system.anticausal_system.stages
+                self.sigmas_causal,self.sigmas_anticausal=sigmas
+            elif system.causal:
+                self.stages_causal = self.system.stages
+                self.sigmas_causal=sigmas
+            else:
+                self.stages_anticausal = self.system.stages
+                self.sigmas_anticausal=sigmas
 
     def _transform_sigmas_causal(self):
         """ transforms the causal system

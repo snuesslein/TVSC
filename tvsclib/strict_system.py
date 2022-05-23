@@ -35,14 +35,21 @@ class StrictSystem(SystemInterface):
         """
 
         if self.causal:
-            description  = "Causal System:\n"
+            text  = "Causal System:\n"
         else:
-            description  = "Anticausal System:\n"
+            text  = "Anticausal System:\n"
 
-        description += "    State dimensions: "+str(self.dims_state)+"\n"
-        description += "    Input dimensions: "+str(self.dims_in)+"\n"
-        description += "    Output dimensions:"+str(self.dims_out)+"\n"
+        text += "    State dimensions: "+str(self.dims_state)+"\n"
+        text += "    Input dimensions: "+str(self.dims_in)+"\n"
+        text += "    Output dimensions:"+str(self.dims_out)+"\n"
 
+        return text
+
+    def description(self) -> String:
+        """
+            returns short description of properties
+        """
+        description = str(self)
         reachable = self.is_reachable()
         observable = self.is_observable()
 
@@ -374,7 +381,7 @@ class StrictSystem(SystemInterface):
                 return False
         return True
 
-    def is_balanced(self,tolerance:float = 1e-15) -> bool:
+    def is_balanced(self,tolerance:float = 1e-14) -> bool:
         """is_canonical Check if the implemention is BALANCED
 
         Args:

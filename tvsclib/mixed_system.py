@@ -28,6 +28,14 @@ class MixedSystem(SystemInterface):
                 + str(self.causal_system)+ "\n"\
                 + str(self.anticausal_system)
 
+    def description(self) -> String:
+        """creates a short description
+
+        """
+        return "Mixed system with the parts \n"\
+                + str(self.causal_system)+ "\n"\
+                + str(self.anticausal_system)
+
     @property
     def dims_in(self) -> List[int]:
         """dims_in Input dimensions for each time step
