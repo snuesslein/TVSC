@@ -88,6 +88,8 @@ def check_dims(system,dim_state_in=0,dim_state_out=0,text_output=True,return_rep
     dim_state = dim_state_in
     #iterate up or down depending on causal/anticausal, the rest stays the same
     if type(system)==tvsclib.mixed_system.MixedSystem:
+        assert system.causal_system.causal==True, "Causal system is not causal"
+        assert system.anticausal_system.causal==False, "Anticausal system is not anticausal"
         result_causal,report_causal = check_dims(system.causal_system,dim_state_in=dim_state_in,
             dim_state_out=dim_state_out,text_output=False,return_report=True)
         result_anticausal,report_anticausal = check_dims(system.anticausal_system,dim_state_in=dim_state_in,
