@@ -1,6 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.collections import PatchCollection
 from tvsclib.stage import Stage
 import tvsclib
 from tvsclib.strict_system import StrictSystem
@@ -9,65 +7,71 @@ from tvsclib.mixed_system import MixedSystem
 
 
 
-def show_system(system,mark_D=True,ax=None):
-    """show_system display a graphical representation of the system
-
-    function that uses matshow to display the resulting matrix
-    and also shows the divisions of the input and output
-
-        Args:
-            system (StrictSystem or MixedSystem): System to display
-            mark_D (bool): If True the Ds are shaded
+try:
+    import matplotlib.pyplot as plt
+    from matplotlib.collections import PatchCollection
 
 
-    """
-    mat = system.to_matrix()
-    if ax is None:
-        plt.matshow(mat)
-        ax = plt.gca()
-    else:
-        ax.matshow(mat)
+    def show_system(system,mark_D=True,ax=None):
+        """show_system display a graphical representation of the system
 
-    x=-0.5
-    y=-0.5
-    if type(system)==tvsclib.mixed_system.MixedSystem:
-        for d_in in system.dims_in:
-            x+=d_in
-            ax.vlines(x,-0.5,mat.shape[0]-0.5)
+        function that uses matshow to display the resulting matrix
+        and also shows the divisions of the input and output
 
-        for d_out in system.dims_out:
-            y+=d_out
-            ax.hlines(y,-0.5,mat.shape[1]-0.5)
+            Args:
+                system (StrictSystem or MixedSystem): System to display
+                mark_D (bool): If True the Ds are shaded
 
-    elif system.causal:
-        for st in system.stages:
-            x+=st.dim_in
-            ax.hlines(y,-0.5,x)
-            ax.vlines(x,y,mat.shape[0]-0.5)
-            y+=st.dim_out
-    else:
-        for st in system.stages:
-            y+=st.dim_out
-            ax.hlines(y,x,mat.shape[1]-0.5)
-            ax.vlines(x,-0.5,y)
-            x+=st.dim_in
 
-    if mark_D:
-        facecolor='k'
-        edgecolor='none'
-        alpha=0.4
-        Dboxes =[]
+        """
+        mat = system.to_matrix()
+        if ax is None:
+            plt.matshow(mat)
+            ax = plt.gca()
+        else:
+            ax.matshow(mat)
+
         x=-0.5
         y=-0.5
-        for (w,h) in zip(system.dims_in,system.dims_out):
-            Dboxes.append(plt.Rectangle((x,y),w,h))
-            x += w
-            y += h
+        if type(system)==tvsclib.mixed_system.MixedSystem:
+            for d_in in system.dims_in:
+                x+=d_in
+                ax.vlines(x,-0.5,mat.shape[0]-0.5)
 
-        pc = PatchCollection(Dboxes, facecolor=facecolor, alpha=alpha,
-                         edgecolor=edgecolor)
-        ax.add_collection(pc)
+            for d_out in system.dims_out:
+                y+=d_out
+                ax.hlines(y,-0.5,mat.shape[1]-0.5)
 
+        elif system.causal:
+            for st in system.stages:
+                x+=st.dim_in
+                ax.hlines(y,-0.5,x)
+                ax.vlines(x,y,mat.shape[0]-0.5)
+                y+=st.dim_out
+        else:
+            for st in system.stages:
+                y+=st.dim_out
+                ax.hlines(y,x,mat.shape[1]-0.5)
+                ax.vlines(x,-0.5,y)
+                x+=st.dim_in
+
+        if mark_D:
+            facecolor='k'
+            edgecolor='none'
+            alpha=0.4
+            Dboxes =[]
+            x=-0.5
+            y=-0.5
+            for (w,h) in zip(system.dims_in,system.dims_out):
+                Dboxes.append(plt.Rectangle((x,y),w,h))
+                x += w
+                y += h
+
+            pc = PatchCollection(Dboxes, facecolor=facecolor, alpha=alpha,
+                             edgecolor=edgecolor)
+            ax.add_collection(pc)
+except:
+    pass
 
 def check_dims(system,dim_state_in=0,dim_state_out=0,text_output=True,return_report=False):
     """check_dims Test if the dimentions of the matrices are correct

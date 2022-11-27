@@ -317,11 +317,7 @@ class StrictSystem(SystemInterface):
         Returns:
             bool: True if system is fully reachable, false otherwise
         """
-        if self.causal: #choose iterator for causal/anticausal system
-            iter = range(1,len(self.stages))
-        else:
-            iter = range(len(self.stages)-2,-1,-1)
-        for i in iter:
+        for i in range(1,len(self.stages)):
             R = self.reachability_matrix(i)
             if min(R.shape)!=0:
                 if np.linalg.matrix_rank(R,tol=tol)<R.shape[0]:
@@ -337,11 +333,7 @@ class StrictSystem(SystemInterface):
         Returns:
             bool: True if system is fully observable, false otherwise
         """
-        if self.causal: #choose iterator for causal/anticausal system
-            iter = range(1,len(self.stages))
-        else:
-            iter = range(len(self.stages)-2,-1,-1)
-        for i in iter:
+        for i in range(1,len(self.stages)):
             O = self.observability_matrix(i)
             if min(O.shape)!=0:
                 if np.linalg.matrix_rank(O,tol=tol)<O.shape[1]:
@@ -390,11 +382,7 @@ class StrictSystem(SystemInterface):
         Returns:
             bool: True if system is balanced
         """
-        if self.causal: #choose iterator for causal/anticausal system
-            iter = range(1,len(self.stages))
-        else:
-            iter = range(len(self.stages)-2,-1,-1)
-        for i in iter:
+        for i in range(1,len(self.stages)):
             obs_matrix = self.observability_matrix(i)
             reach_matrix = self.reachability_matrix(i)
             obs_gramian = obs_matrix.T@obs_matrix
@@ -442,11 +430,7 @@ class StrictSystem(SystemInterface):
         Returns:
             bool: True if system is ordered
         """
-        if self.causal: #choose iterator for causal/anticausal system
-            iter = range(1,len(self.stages))
-        else:
-            iter = range(len(self.stages)-2,-1,-1)
-        for i in iter:
+        for i in range(1,len(self.stages)):
             obs_matrix = self.observability_matrix(i)
             reach_matrix = self.reachability_matrix(i)
             obs_gramian = obs_matrix.T@obs_matrix
@@ -472,10 +456,12 @@ class StrictSystem(SystemInterface):
 
         Returns:
             List[np.ndarray]: Reachability matricies for each timestep
+
+        For causal systems the indexing is consistent with the indexing for the matrices.
+        For anticausal systems one has to use [k+1] to get the Reachability Matrix corresponding to state x_k,
+        as the Matrix corresponding to the state k=-1 is included as first element.
         """
-        if self.causal:
-            return self._reachability_matricies_causal()
-        return self._reachability_matricies_anticausal()
+        return [self.reachability_matrix(k) for k in range(len(self.stages)+1)]
 
     def observability_matricies(self) -> List[np.ndarray]:
         """observability_matricies Returns list of observability matricies.
@@ -483,17 +469,21 @@ class StrictSystem(SystemInterface):
 
         Returns:
             List[np.ndarray]: Observability matricies for each timestep
+
+        For causal systems the indexing is consistent with the indexing for the matrices.
+        For anticausal systems one has to use [k+1] to get the Observability Matrix corresponding to state x_k,
+        as the Matrix corresponding to the state k=-1 is included as first element.
         """
-        if self.causal:
-            return self._observability_matricies_causal()
-        return self._observability_matricies_anticausal()
+        return [self.observability_matrix(k) for k in range(len(self.stages)+1)]
+
 
     def reachability_matrix(self,k:int) -> np.ndarray:
         """reachability_matricx Returns reachability matrix for index k.
-        This represents the mapping from the relevant inputs to the state x_k
-        In the causal case this is [...,A_{k-1}B_{k-2},B_{k-1}]
+        This represents the mapping from the relevant inputs to the state x
+        In the causal case the function returns the mapping to the state x_k [...,A_{k-1}B_{k-2},B_{k-1}]
 
-        In the anticausal case this is [B_{k+1},A{k+1}B_{k+2},....]
+        In the anticausal case the function returns the mapping to the state x_{k+1} [B_{k},A{k}B_{k+1},....]
+        The change in the k for the anicausal case is done to make the indexing consistent with the indexing in the dim_state vector.
 
         See also TVSC Lecture slides Unit 5.5 page 2.
 
@@ -505,26 +495,32 @@ class StrictSystem(SystemInterface):
         TODO: it is unclear how to deal with systems that have nonzero final state dims
         """
         if self.causal:
-            mats = [self.stages[k-1].B_matrix]
-            As = self.stages[k-1].A_matrix
-            for l in range(k-2,-1,-1):
-                mats.append(As@self.stages[l].B_matrix)
-                As = As@self.stages[l].A_matrix
-            mats.reverse()
-            return(np.hstack(mats))
+            if k>0:
+                mats = [self.stages[k-1].B_matrix]
+                As = self.stages[k-1].A_matrix
+                for l in range(k-2,-1,-1):
+                    mats.append(As@self.stages[l].B_matrix)
+                    As = As@self.stages[l].A_matrix
+                mats.reverse()
+                return(np.hstack(mats))
+            else:
+                return np.zeros((self.stages[0].dim_state,0))
         else:
-            mats = [self.stages[k+1].B_matrix]
-            As = self.stages[k+1].A_matrix
-            for l in range(k+2,len(self.stages),1):
-                mats.append(As@self.stages[l].B_matrix)
-                As = As@self.stages[l].A_matrix
-            return(np.hstack(mats))
+            if k<len(self.stages):
+                mats = [self.stages[k].B_matrix]
+                As = self.stages[k].A_matrix
+                for l in range(k+1,len(self.stages),1):
+                    mats.append(As@self.stages[l].B_matrix)
+                    As = As@self.stages[l].A_matrix
+                return(np.hstack(mats))
+            else:
+                return np.zeros((self.stages[-1].dim_state,0))
 
 
     def observability_matrix(self,k:int) -> np.ndarray:
         """observability_matricx Returns observability matrix for index k.
-        This represents the mapping from the state x_i to the relevant outputs
-        In the causal case this is:
+        This represents the mapping from the state x to the relevant outputs
+        In the causal case the function returns the mapping form the state x_k:
 
         [C_k,
 
@@ -532,13 +528,14 @@ class StrictSystem(SystemInterface):
 
         ...]
 
-        In the anticausal case this is
+        In the anticausal case this is the mapping form the state x_{k+1}:
 
         [...,
 
-        C_{k-1}A_k,
+        C_{k-2}A_{k-1},
 
-        C_k]
+        C_{k-1}]
+        The change in the k for the anicausal case is done to make the indexing consistent with the indexing in the dim_state vector.
 
         See also TVSC Lecture slides Unit 5.5 page 2.
 
@@ -550,98 +547,26 @@ class StrictSystem(SystemInterface):
         TODO: it is unclear how to deal with systems that have nonzero final state dims
         """
         if self.causal:
-            mats = [self.stages[k].C_matrix]
-            As = self.stages[k].A_matrix
-            for l in range(k+1,len(self.stages),1):
-                mats.append(self.stages[l].C_matrix@As)
-                As = self.stages[l].A_matrix@As
-            return(np.vstack(mats))
+            if k<len(self.stages):
+                mats = [self.stages[k].C_matrix]
+                As = self.stages[k].A_matrix
+                for l in range(k+1,len(self.stages),1):
+                    mats.append(self.stages[l].C_matrix@As)
+                    As = self.stages[l].A_matrix@As
+                return(np.vstack(mats))
+            else:
+                return np.zeros((0,self.stages[-1].A_matrix.shape[0]))
         else:
-            mats = [self.stages[k].C_matrix]
-            As = self.stages[k].A_matrix
-            for l in range(k-1,-1,-1):
-                mats.append(self.stages[l].C_matrix@As)
-                As = self.stages[l].A_matrix@As
-            mats.reverse()
-            return(np.vstack(mats))
-
-
-
-    def _observability_matricies_causal(self) -> List[np.ndarray]:
-        """_observability_matricies_causal Returns list of observability matricies.
-        See TVSC Lecture slides Unit 5.5 page 2.
-
-        Returns:
-            List[np.ndarray]: Observability matricies for each timestep
-        """
-        all_obs_matricies:List[np.ndarray] = [np.zeros((0,0))]
-        for k in range(1,len(self.stages)):
-            obs_matrix_parts = []
-            for i in range(k,len(self.stages)):
-                o = self.stages[i].C_matrix
-                for n in range(i-1,k-1,-1):
-                    o = o @ self.stages[n].A_matrix
-                obs_matrix_parts.append(o)
-            all_obs_matricies.append(np.vstack(obs_matrix_parts))
-        return all_obs_matricies
-
-    def _reachability_matricies_causal(self) -> List[np.ndarray]:
-        """_reachability_matricies_causal Returns list of reachability matricies.
-        See TVSC Lecture slides Unit 5.5 page 2.
-
-        Returns:
-            List[np.ndarray]: Reachability matricies for each timestep
-        """
-        all_reach_matricies:List[np.ndarray] = [np.zeros((0,0))]
-        for k in range(1,len(self.stages)):
-            reach_matrix_parts = []
-            for i in range(k-1,-1,-1):
-                r = self.stages[i].B_matrix
-                for n in range(i+1,k):
-                    r = self.stages[n].A_matrix @ r
-                reach_matrix_parts.append(r)
-            reach_matrix_parts.reverse()
-            all_reach_matricies.append(np.hstack(reach_matrix_parts))
-        return all_reach_matricies
-
-    def _observability_matricies_anticausal(self) -> List[np.ndarray]:
-        """_observability_matricies_anticausal Returns list of observability matricies.
-        See TVSC Lecture slides Unit 5.5 page 2.
-
-        Returns:
-            List[np.ndarray]: Observability matricies for each timestep
-        """
-        all_obs_matricies:List[np.ndarray] = [np.zeros((0,0))]
-        for k in range(1,len(self.stages)):
-            obs_matrix_parts = []
-            for i in range(k,len(self.stages)):
-                o = self.stages[len(self.stages) - i - 1].C_matrix
-                for n in range(i-1,k-1,-1):
-                    o = o @ self.stages[len(self.stages) - n -1].A_matrix
-                obs_matrix_parts.append(o)
-            all_obs_matricies.append(np.vstack(obs_matrix_parts))
-        all_obs_matricies.reverse()
-        return all_obs_matricies
-
-    def _reachability_matricies_anticausal(self) -> List[np.ndarray]:
-        """_reachability_matricies_anticausal Returns list of reachability matricies.
-        See TVSC Lecture slides Unit 5.5 page 2.
-
-        Returns:
-            List[np.ndarray]: Reachability matricies for each timestep
-        """
-        all_reach_matricies:List[np.ndarray] = [np.zeros((0,0))]
-        for k in range(1,len(self.stages)):
-            reach_matrix_parts = []
-            for i in range(k-1,-1,-1):
-                r = self.stages[len(self.stages) - i - 1].B_matrix
-                for n in range(i+1,k):
-                    r = self.stages[len(self.stages) - n - 1].A_matrix @ r
-                reach_matrix_parts.append(r)
-            reach_matrix_parts.reverse()
-            all_reach_matricies.append(np.hstack(reach_matrix_parts))
-        all_reach_matricies.reverse()
-        return all_reach_matricies
+            if k>0:
+                mats = [self.stages[k-1].C_matrix]
+                As = self.stages[k-1].A_matrix
+                for l in range(k-2,-1,-1):
+                    mats.append(self.stages[l].C_matrix@As)
+                    As = self.stages[l].A_matrix@As
+                mats.reverse()
+                return(np.vstack(mats))
+            else:
+                return np.zeros((0,self.stages[0].A_matrix.shape[0]))
 
     def transpose(self) -> StrictSystem:
         """transpose Transposed system
@@ -699,7 +624,7 @@ class StrictSystem(SystemInterface):
                     @ self.stages[i].D_matrix) @ self.stages[i].D_matrix.transpose()
             else:
                 inverse_D = self.stages[i].D_matrix.transpose() \
-                    @ np.linalg.inv(self.stages[i].D_matrix @ self.stages[i].D_matrix.transpose())
+                    @ np.linalg.inv(self.stages[i].D_matrix @ self.stages[i].D_matrix.transpose())#TODO Pinv?
             inverse_B = self.stages[i].B_matrix @ inverse_D
             stages_inverse.append(Stage(
                 self.stages[i].A_matrix - inverse_B @ self.stages[i].C_matrix,

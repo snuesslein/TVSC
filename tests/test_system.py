@@ -123,12 +123,12 @@ def testSystem():
     matrix_rec = system_anticausal.to_matrix()
     i_in= sum(system_causal.dims_in)#-dims_in[-1]
     i_out = sum(system_causal.dims_out)#-dims_out[-1]
-    for i in range(len(system_anticausal.stages)-2,-1,-1):
+    for i in range(len(system_anticausal.stages)-1,-1,-1):
         all_obs.append(system_anticausal.observability_matrix(i))
         all_reach.append(system_anticausal.reachability_matrix(i))
 
-        i_in -= system_anticausal.dims_in[i+1]
-        i_out -= system_anticausal.dims_out[i+1]
+        i_in -= system_anticausal.dims_in[i]
+        i_out -= system_anticausal.dims_out[i]
         all_hankels.append(matrix_rec[:i_out,i_in:])
 
 
