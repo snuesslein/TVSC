@@ -31,7 +31,8 @@ def _frobeniusnorm_squared_causal(stages):
     K = stages[0].B_matrix@stages[0].B_matrix.T
     v = 0
     for stage in stages[1:]:
-        v += np.trace(stage.C_matrix@K@stage.C_matrix.T)#TODO evtl eisum notation
+        #v += np.einsum('ij,jk,ik',stage.C_matrix,K,stage.C_matrix)
+        v += np.trace(stage.C_matrix@K@stage.C_matrix.T)
         K = stage.A_matrix@K@stage.A_matrix.T+stage.B_matrix@stage.B_matrix.T
     return v
 
@@ -40,6 +41,7 @@ def _frobeniusnorm_squared_anticausal(stages):
     K = stages[0].C_matrix.T@stages[0].C_matrix
     v = 0
     for stage in stages[1:]:
+        #v += np.einsum('ji,jk,ki',stage.B_matrix,K,stage.B_matrix)
         v += np.trace(stage.B_matrix.T@K@stage.B_matrix)
         K = stage.A_matrix.T@K@stage.A_matrix+stage.C_matrix.T@stage.C_matrix
     return v

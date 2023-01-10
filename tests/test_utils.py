@@ -23,7 +23,11 @@ def testUtils():
     #test storing and loading mixed systems
     file = TemporaryFile()
     system,sigmas = identify(matrix,dims_in,dims_out,compute_sigmas=True)
-    utils.save_system(system,file,sigmas=sigmas)
+
+
+    #mixed with sigmas
+    file = TemporaryFile()
+    utils.save_system(file,system,sigmas=sigmas)
     file.seek(0)
     system_load,sigmas_load = utils.load_system(file,load_sigmas=True)
 
@@ -32,4 +36,52 @@ def testUtils():
     for sig_a,sig_b in zip(sigmas,sigmas_load):
         for s_a,s_b in zip(sig_a,sig_b):
             assert np.all(s_a==s_b), "loaded sigmas not equal"
-    #TODO tests for other cases
+
+    #mixed without sigmas
+    file = TemporaryFile()
+    utils.save_system(file,system)
+    file.seek(0)
+    system_load = utils.load_system(file)
+
+    assert np.allclose(system.to_matrix(),system_load.to_matrix()),"loaded system incorrect"
+
+
+    #causal with sigmas
+    file = TemporaryFile()
+    utils.save_system(file,system.causal_system,sigmas=sigmas[0])
+    file.seek(0)
+    system_load,sigmas_load = utils.load_system(file,load_sigmas=True)
+
+    assert np.allclose(system.causal_system.to_matrix(),system_load.to_matrix()),"loaded system incorrect"
+
+    for s_a,s_b in zip(sigmas[0],sigmas_load):
+        assert np.all(s_a==s_b), "loaded sigmas not equal"
+
+    #causal without sigmas
+    file = TemporaryFile()
+    utils.save_system(file,system.causal_system)
+    file.seek(0)
+    system_load = utils.load_system(file)
+
+    assert np.allclose(system.causal_system.to_matrix(),system_load.to_matrix()),"loaded system incorrect"
+
+
+
+    #anticausal with sigmas
+    file = TemporaryFile()
+    utils.save_system(file,system.anticausal_system,sigmas=sigmas[1])
+    file.seek(0)
+    system_load,sigmas_load = utils.load_system(file,load_sigmas=True)
+
+    assert np.allclose(system.anticausal_system.to_matrix(),system_load.to_matrix()),"loaded system incorrect"
+
+    for s_a,s_b in zip(sigmas[1],sigmas_load):
+        assert np.all(s_a==s_b), "loaded sigmas not equal"
+
+    #causal without sigmas
+    file = TemporaryFile()
+    utils.save_system(file,system.anticausal_system)
+    file.seek(0)
+    system_load = utils.load_system(file)
+
+    assert np.allclose(system.anticausal_system.to_matrix(),system_load.to_matrix()),"loaded system incorrect"

@@ -166,17 +166,20 @@ def check_dims(system,dim_state_in=0,dim_state_out=0,text_output=True,return_rep
         return correct
 
 
-def save_system(system, file,sigmas=None):
+def save_system(file ,system, sigmas=None):
     """save_system saves system in file
 
     function that uses np.savez to store the system.
     For this the system is converted into a dictionary and stored
 
         Args:
-            system (StrictSystem or MixedSystem):   System to store
             file (str):                             Filename
+            system (StrictSystem or MixedSystem):   System to store
             sigmas (Tuple/Sequence,optional):       Hakel singualr values to store
     """
+
+    if not isinstance(system,(StrictSystem,MixedSystem)):
+        raise TypeError("can only save Mixed or strict system")
 
     if type(system)==tvsclib.mixed_system.MixedSystem:
         d = {"K":len(system.causal_system.stages)}
@@ -187,8 +190,13 @@ def save_system(system, file,sigmas=None):
                       "D"+str(i):system.causal_system.stages[i].D_matrix,
                       "E"+str(i):system.anticausal_system.stages[i].A_matrix,
                       "F"+str(i):system.anticausal_system.stages[i].B_matrix,
-                      "G"+str(i):system.anticausal_system.stages[i].C_matrix,})
+                      "G"+str(i):system.anticausal_system.stages[i].C_matrix,
+                      "H"+str(i):system.anticausal_system.stages[i].D_matrix,})
+        d.update({"info":"causal system saved by tvsclib v0.0.0"})
         if not sigmas is None:
+            if not (all([isinstance(s,np.ndarray) for s in sigmas[0]]) \
+                and all([isinstance(s,np.ndarray) for s in sigmas[1]])):
+                raise TypeError("for Miexed systems, the sigmas must be a tuple of lists of ndarrays")
             d.update(dict(zip(["s"+str(i) for i in range(len(sigmas[0]))],sigmas[0])))
             d.update(dict(zip(["s_a"+str(i) for i in range(len(sigmas[0]))],sigmas[1])))
 
@@ -200,13 +208,24 @@ def save_system(system, file,sigmas=None):
                     "B"+str(i):system.stages[i].B_matrix,
                     "C"+str(i):system.stages[i].C_matrix,
                     "D"+str(i):system.stages[i].D_matrix,})
+        d.update({"info":"causal system saved by tvsclib v0.0.0"})
+        if not sigmas is None:
+            if not all([isinstance(s,np.ndarray) for s in sigmas]):
+                raise TypeError("for causal systems, the sigmas must be a lists of ndarrays")
+            d.update(dict(zip(["s"+str(i) for i in range(len(sigmas))],sigmas)))
+
     else:
         d = {"K":len(system.stages)}
         for i in range(len(system.stages)):
             d.update({"E"+str(i):system.stages[i].A_matrix,
                     "F"+str(i):system.stages[i].B_matrix,
                     "G"+str(i):system.stages[i].C_matrix,
-                    "D"+str(i):system.stages[i].D_matrix,})
+                    "H"+str(i):system.stages[i].D_matrix,})
+        d.update({"info":"anticausal system saved by tvsclib v0.0.0"})
+        if not sigmas is None:
+            if not all([isinstance(s,np.ndarray) for s in sigmas]):
+                raise TypeError("for anticausal systems, the sigmas must be a lists of ndarrays")
+            d.update(dict(zip(["s_a"+str(i) for i in range(len(sigmas))],sigmas)))
 
     np.savez(file, **d)
 
@@ -215,19 +234,50 @@ def load_system(file,load_sigmas=False):
     """
     TODO: not only load mixed systems
     """
-    data = dict(np.load(file))
+    data = np.load(file)
 
     stages_causal = []
     stages_anticausal = []
-    for i in range(data['K']):
-        stages_causal.append(Stage(data["A"+str(i)],data["B"+str(i)],data["C"+str(i)],data["D"+str(i)]))
-        stages_anticausal.append(Stage(data["E"+str(i)],data["F"+str(i)],data["G"+str(i)],np.zeros_like(data["D"+str(i)])))
 
-    system_loaded = MixedSystem(\
-                    causal_system=StrictSystem(stages=stages_causal,causal=True),\
-                    anticausal_system=StrictSystem(stages=stages_anticausal,causal=False))
+    #check with variables are available and construct a number representing the type of the system
+    type = 1*("A0" in data.files) + 2*("E0" in data.files)
+
+    if type == 1 or type == 3: #load causal part
+        for i in range(data['K']):
+            stages_causal.append(Stage(data["A"+str(i)],data["B"+str(i)],data["C"+str(i)],data["D"+str(i)]))
+        causal_system=StrictSystem(stages=stages_causal,causal=True)
+
+    if type == 2 or type == 3: #load anticausal part
+        for i in range(data['K']):
+            stages_anticausal.append(Stage(data["E"+str(i)],data["F"+str(i)],data["G"+str(i)],data["H"+str(i)]))
+        anticausal_system=StrictSystem(stages=stages_anticausal,causal=False)
+
+    #now get correct system
+    if type == 1:
+        system_loaded = causal_system
+    elif type == 2:
+        system_loaded = anticausal_system
+    elif type == 3:
+        system_loaded = MixedSystem(causal_system=causal_system,anticausal_system=anticausal_system)
+    else:
+        raise ValueError("file does not contain system")
+
     if load_sigmas:
-        return system_loaded, \
+        if type == 1: #load causal
+            if not ("s0" in data.files):
+                raise ValueError("file does not contain sigmas")
+            return system_loaded, [data["s"+str(i)] for i in range(data['K']-1)]
+
+        if type == 2: #load anticausal
+            if not ("s_a0" in data.files):
+                raise ValueError("file does not contain sigmas")
+            return system_loaded, [data["s_a"+str(i)] for i in range(data['K']-1)]
+
+        if type == 3: #load mixed
+            if not ("s0" in data.files and "s_a0" in data.files):
+                raise ValueError("file does not contain sigmas")
+            return system_loaded, \
         ([data["s"+str(i)] for i in range(data['K']-1)],[data["s_a"+str(i)] for i in range(data['K']-1)])
+
     else:
         return system_loaded
